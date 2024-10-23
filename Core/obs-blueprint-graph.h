@@ -5,12 +5,16 @@
 #include "Structs/multicast-delegate.h"
 #include "Structs/pixel.h"
 
+class GUIGraph;
+
 class OBSBlueprintGraph {
+	friend class GUIGraph;
 public:
 	OBSBlueprintGraph();
 	~OBSBlueprintGraph();
 
 	/* C function mapped with interface */
+	void sourcePropertiesClick();
 	void tick(float deltaSeconds);
 	pixel* getRenderPixels();
 	uint32_t getWidth();
@@ -47,6 +51,8 @@ public:
 	multicastDelegate_ZeroParam onGraphEndTick;
 
 private:
+
+	GUIGraph* guiGraph = nullptr;
 
 	std::list<OBSBlueprintConnector*> graphConnectors;
 	std::list<OBSBlueprintNode*> graphNodes;

@@ -10,6 +10,7 @@ extern "C" {
 
 	CPP_BlueprintGraphPtr c_blueprint_graph_create();
 	void c_blueprint_graph_destroy(CPP_BlueprintGraphPtr);
+	void c_blueprint_graph_properties_click(CPP_BlueprintGraphPtr);
 	void c_blueprint_graph_tick(CPP_BlueprintGraphPtr, float);
 	struct pixel* c_blueprint_graph_get_pixels(CPP_BlueprintGraphPtr);
 	unsigned int c_blueprint_graph_get_width(CPP_BlueprintGraphPtr);

@@ -4,11 +4,13 @@
 #include "obs-blueprint-connector.h"
 #include "Structs/multicast-delegate.h"
 
+class GUINode;
+
 /**
  * Base class for OBS Blueprint nodes. This class should never be used directly, only child classes.
  */
 class OBSBlueprintNode {
-
+	friend class GUINode;
 public:
 	/**
 	 * Internal function. Bind the node with the graph begin/end tick delegates.

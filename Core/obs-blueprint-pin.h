@@ -4,6 +4,7 @@
 class OBSBlueprintConnector;
 class OBSBlueprintGraph;
 class OBSBlueprintNode;
+class GUIPin;
 
 /**
  * All OBS Blueprint pin types that can be used with GUI graph.
@@ -46,6 +47,11 @@ constexpr const char* PinName[] = {
 class OBSBlueprintPin {
 	friend class OBSBlueprintConnector;
 public:
+	/**
+	 * Get the pin type.
+	 * @return The pin type.
+	 */
+	PinType getPinType() const {return pinType;}
 
 	/**
 	 * Get the node associated with this pin.

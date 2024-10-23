@@ -1,5 +1,6 @@
 ﻿#include "obs-blueprint-graph.h"
 
+#include "GUI/gui-graph.h"
 #include "Nodes/node-color-source.h"
 #include "Nodes/FloatHelpers/node-float-to-int.h"
 #include "Nodes/node-sinus-time.h"
@@ -32,6 +33,7 @@ extern "C" {
 
 	OBSBlueprintGraph::~OBSBlueprintGraph()
 	{
+		delete guiGraph;
 		for(auto connector : graphConnectors) {
 			delete connector;
 		}
@@ -46,6 +48,16 @@ extern "C" {
 		blog(LOG_DEBUG, "[OBS BLUEPRINT] Graph video input pin deleted!");
 
 		blog(LOG_DEBUG, "[OBS BLUEPRINT] Graph deleted!");
+	}
+
+
+	void OBSBlueprintGraph::sourcePropertiesClick()
+	{
+		blog(LOG_DEBUG, "[OBS BLUEPRINT] Graph source properties clicked!");
+		if(guiGraph == nullptr) {
+			guiGraph = new GUIGraph(this);
+		}
+		guiGraph->show();
 	}
 
 	void OBSBlueprintGraph::tick(float deltaSeconds)
@@ -97,7 +109,7 @@ extern "C" {
 }
 
 void OBSBlueprintGraph::createConnector(OBSBlueprintOutputPin *from,
-	OBSBlueprintInputPin *to)
+                                        OBSBlueprintInputPin *to)
 {
 	if(from == nullptr || to == nullptr) {
 		blog(LOG_ERROR, "Graph connector pins cannot be null");

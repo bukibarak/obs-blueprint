@@ -37,21 +37,9 @@ static uint32_t obs_blueprint_source_height(void* data)
 static obs_properties_t* obs_blueprint_source_properties(void* data)
 {
 	CPP_BlueprintGraphPtr graph = data;
-
-    // TODO GET PROPERTIES
-	debug("OBS SOURCE properties");
-
+	c_blueprint_graph_properties_click(graph);
 
     return NULL;
-}
-
-static void obs_mouse_click(void *data, const struct obs_mouse_event *event,
-			    int32_t type, bool mouse_up, uint32_t click_count)
-{
-	CPP_BlueprintGraphPtr graph = data;
-	if(!mouse_up) {
-		debug("MOUSE CLICK %d", type);
-	}
 }
 
 static void obs_blueprint_source_update(void* data, obs_data_t* settings)
@@ -64,6 +52,9 @@ static void obs_blueprint_source_update(void* data, obs_data_t* settings)
 
 static void* obs_blueprint_source_create(obs_data_t* settings, obs_source_t* source)
 {
+	UNUSED_PARAMETER(settings);
+	UNUSED_PARAMETER(source);
+
 	return c_blueprint_graph_create();
 }
 
@@ -162,7 +153,6 @@ struct obs_source_info obs_blueprint_source = {
     .get_width = obs_blueprint_source_width,
     .get_height = obs_blueprint_source_height,
 	.get_properties = obs_blueprint_source_properties,
-	.mouse_click = obs_mouse_click,
     .create = obs_blueprint_source_create,
     .destroy = obs_blueprint_source_destroy,
     .update = obs_blueprint_source_update,

@@ -13,6 +13,11 @@ extern "C"
 		delete static_cast<OBSBlueprintGraph *>(graph);
 	}
 
+	void c_blueprint_graph_properties_click(CPP_BlueprintGraphPtr graph)
+	{
+		static_cast<OBSBlueprintGraph *>(graph)->sourcePropertiesClick();
+	}
+
 	void c_blueprint_graph_tick(CPP_BlueprintGraphPtr graph, float seconds)
 	{
 		static_cast<OBSBlueprintGraph *>(graph)->tick(seconds);
@@ -33,4 +38,3 @@ extern "C"
 		return static_cast<OBSBlueprintGraph *>(graph)->getHeight();
 	}
 }
-
