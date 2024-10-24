@@ -9,7 +9,7 @@ It's distributed under the GNU General Public License v2 (or any later version) 
 
 1. Clone the OBS Studio repository: https://github.com/obsproject/obs-studio/ 
 2. Go to the `plugins` folder and clone this repository
-3. Open `CMakeLists.txt` in the plugins folder and add this line IN ALPHABETICAL ORDER: `add_obs_plugin(obs-blueprint)` *(it should be before obs-ffmpeg)*
+3. Open `CMakeLists.txt` in the <ins>plugins folder</ins> (not the one inside obs-blueprint) and add this line IN ALPHABETICAL ORDER: `add_obs_plugin(obs-blueprint)` *(it should be before obs-ffmpeg)*
 4. Follow https://github.com/obsproject/obs-studio/wiki/build-instructions-for-windows to generate the Visual Studio solution files
 5. Open `build_x64\obs-studio.sln` with Microsoft Visual Studio or Jetbrains Rider (or any other IDE that support SLN solutions)
 6. Open the `obs-blueprint` project properties and add `/EHsc` to the additional command line arguments.

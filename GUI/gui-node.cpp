@@ -15,7 +15,7 @@ GUINode::GUINode(OBSBlueprintNode *node, QGraphicsItem *parent) : QGraphicsObjec
 		}
 		else {
 			QGraphicsObject* guiPin = new GUIPin(pin, this);
-			guiPin->setPos(0, 150 + leftPinPlaced * GUI_PIN_SIZE * 2);
+			guiPin->setPos(0, GUI_NODE_PINS_MARGIN + leftPinPlaced * GUI_PIN_SIZE * 2);
 			++leftPinPlaced;
 		}
 	}
@@ -25,7 +25,7 @@ GUINode::GUINode(OBSBlueprintNode *node, QGraphicsItem *parent) : QGraphicsObjec
 		}
 		else {
 			QGraphicsObject* guiPin = new GUIPin(pin, this);
-			guiPin->setPos(GUI_PIN_SIZE + GUI_NODE_WIDTH, 150 + rightPinPlaced * GUI_PIN_SIZE * 2);
+			guiPin->setPos(GUI_PIN_SIZE + GUI_NODE_WIDTH, GUI_NODE_PINS_MARGIN + rightPinPlaced * GUI_PIN_SIZE * 2);
 			++rightPinPlaced;
 		}
 	}
@@ -76,16 +76,21 @@ void GUINode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 	font.setBold(true);
 	painter->setFont(font);
 	QTextOption textOption(Qt::AlignHCenter | Qt::AlignVCenter);
-	painter->drawText(textRect, "Salut à tous!", textOption);
+	painter->drawText(textRect, QString::fromStdString(node->displayName), textOption);
 
-	// QRectF textBounds = painter->boundingRect(textRect, "Salut à tous!", textOption);
-	//
-	// painter->setPen(Qt::black);
-	// painter->setBrush(Qt::white);
-	// QPainterPath path;
-	// path.addText(textBounds.x(), textBounds.y(), font, "Salut à tous!");
-	// painter->drawPath(path);
+}
 
-	// painter->setBrush(Qt::black);
-	// painter->drawLines(cornerLines);
+OBSBlueprintNode * GUINode::getBlueprintNode() const
+{
+	return node;
+}
+
+const std::string & GUINode::getDisplayName() const
+{
+	return node->displayName;
+}
+
+void GUINode::GUIOnly_addConnector(GUIConnector *connector)
+{
+	attachedConnectors.push_back(connector);
 }

@@ -3,6 +3,7 @@
 NodeSinusTime::NodeSinusTime(const float &defaultSpeed,
 	const float &defaultAmplitude)
 {
+	displayName = obs_module_text("NodeSinusTime");
 	speedPin = createInputPin(FLOAT_PIN, defaultSpeed);
 	amplitudePin = createInputPin(FLOAT_PIN, defaultAmplitude);
 	resultPin = createOutputPin(FLOAT_PIN, 0.0f);

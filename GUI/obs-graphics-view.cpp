@@ -51,3 +51,12 @@ void OBSGraphicsView::scrollContentsBy(int dx, int dy)
 		QGraphicsView::scrollContentsBy(dx, dy);
 	}
 }
+
+void OBSGraphicsView::wheelEvent(QWheelEvent *event)
+{
+	int valueH = horizontalScrollBar()->value();
+	int valueV = verticalScrollBar()->value();
+	QGraphicsView::wheelEvent(event);
+	horizontalScrollBar()->setValue(valueH);
+	verticalScrollBar()->setValue(valueV); // FIX position bug when zooming
+}

@@ -25,7 +25,7 @@ extern "C" {
 		// addNode(absNode);
 		// createConnector(absNode->getOutputPin(), floatToIntNode->getFloatInputPin());
 		//
-		// NodeSinusTime* sinusTimeNode = new NodeSinusTime(5.0f, 300.0f);
+		// NodeSinusTime* sinusTimeNode = new NodeSinusTime(2.0f, 300.0f);
 		// addNode(sinusTimeNode);
 		// createConnector(sinusTimeNode->getResultPin(), absNode->getInputPin());
 
@@ -108,27 +108,28 @@ extern "C" {
 	}
 }
 
-void OBSBlueprintGraph::createConnector(OBSBlueprintOutputPin *from,
+OBSBlueprintConnector* OBSBlueprintGraph::createConnector(OBSBlueprintOutputPin *from,
                                         OBSBlueprintInputPin *to)
 {
 	if(from == nullptr || to == nullptr) {
 		blog(LOG_ERROR, "Graph connector pins cannot be null");
-		return;
+		return nullptr;
 	}
 
 	if(from->getConnector() != nullptr) {
-		blog(LOG_WARNING, "Graph connector given output pin is already connected! Deleting previous connector first...");
+		blog(LOG_WARNING, "Graph connector given output pin is already connected! Deleting previous connector first... (will not be updated by GUI)");
 		deleteConnector(from->getConnector());
 	}
 
 	if(to->getConnector() != nullptr) {
-		blog(LOG_WARNING, "Graph connector given input pin is already connected! Deleting previous connector first...");
+		blog(LOG_WARNING, "Graph connector given input pin is already connected! Deleting previous connector first... (will not be updated by GUI)");
 		deleteConnector(to->getConnector());
 	}
 
 
 	OBSBlueprintConnector* newConnector = new OBSBlueprintConnector(from, to);
 	graphConnectors.push_back(newConnector);
+	return newConnector;
 }
 
 void OBSBlueprintGraph::deleteConnector(OBSBlueprintConnector *connector)

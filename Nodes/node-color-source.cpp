@@ -3,6 +3,8 @@
 
 NodeColorSource::NodeColorSource()
 {
+	displayName = obs_module_text("NodeColorSource");
+
 	pinWidth = createInputPin(INT_PIN, int32_t());
 	pinHeight = createInputPin(INT_PIN, int32_t());
 	pinColor = createInputPin(COLOR_PIN, uint32_t());

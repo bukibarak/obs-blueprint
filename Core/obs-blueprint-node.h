@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <string>
 #include <list>
 #include <vector>
 #include "obs-blueprint-connector.h"
@@ -185,6 +186,8 @@ protected:
 	 * \b NOTE: This will be called \b before the graph current video frame is rendered by OBS.
 	 */
 	virtual void onGraphEndTick() {}
+
+	std::string displayName;
 
 	bool haveTickedThisCycle = false;
 	bool haveExecutedThisCycle = false;

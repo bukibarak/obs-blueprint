@@ -5,6 +5,8 @@ class NodeFloatAbs : public OBSBlueprintNode {
 public:
 	NodeFloatAbs()
 	{
+		displayName = obs_module_text("NodeFloatAbs");
+
 		inputPin = createInputPin(FLOAT_PIN, 0.0f);
 		outputPin = createOutputPin(FLOAT_PIN, 0.0f);
 	}

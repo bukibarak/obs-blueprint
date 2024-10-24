@@ -27,7 +27,7 @@ public:
 	 * @param from the parent output pin.
 	 * @param to the child input pin.
 	 */
-	void createConnector(OBSBlueprintOutputPin* from, OBSBlueprintInputPin* to);
+	OBSBlueprintConnector* createConnector(OBSBlueprintOutputPin* from, OBSBlueprintInputPin* to);
 
 	/**
 	 * Remove an existing connector on the graph.

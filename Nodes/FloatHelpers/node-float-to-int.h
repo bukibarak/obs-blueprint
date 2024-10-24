@@ -6,6 +6,8 @@ class NodeFloatToInt : public OBSBlueprintNode {
 public:
 	NodeFloatToInt()
 	{
+		displayName = obs_module_text("NodeFloatToInt");
+
 		floatPin = createInputPin(FLOAT_PIN, 0.0f);
 		intPin = createOutputPin(INT_PIN, 0);
 	}

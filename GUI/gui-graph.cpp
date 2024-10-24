@@ -11,7 +11,7 @@
 GUIGraph::GUIGraph(OBSBlueprintGraph *attachedGraph) : graph(attachedGraph)
 {
 	view = new OBSGraphicsView(static_cast<QWidget *>(obs_frontend_get_main_window()));
-	scene = new OBSGraphicsScene();
+	scene = new OBSGraphicsScene(graph);
 	scene->setView(view);
 	view->setScene(scene);
 
@@ -24,8 +24,9 @@ GUIGraph::~GUIGraph()
 {
 	view->invalidateScene();
 	view->close();
-	// delete view;
 	// delete scene;
+	// delete view;
+
 }
 
 

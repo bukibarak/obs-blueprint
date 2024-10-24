@@ -2,12 +2,14 @@
 
 #include <QPainter>
 
-GUIPin::GUIPin(OBSBlueprintInputPin *pin, QGraphicsItem *parent) : QGraphicsObject(parent),  inputPin(pin)
+#include "gui-node.h"
+
+GUIPin::GUIPin(OBSBlueprintInputPin *pin, QGraphicsItem *parent) : QGraphicsObject(parent),  parentNode(dynamic_cast<GUINode*>(parent)), inputPin(pin)
 {
 
 }
 
-GUIPin::GUIPin(OBSBlueprintOutputPin *pin, QGraphicsItem *parent) : QGraphicsObject(parent),  outputPin(pin)
+GUIPin::GUIPin(OBSBlueprintOutputPin *pin, QGraphicsItem *parent) : QGraphicsObject(parent),  parentNode(dynamic_cast<GUINode*>(parent)), outputPin(pin)
 {
 }
 
@@ -23,8 +25,7 @@ void GUIPin::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 	Q_UNUSED(widget)
 
 	bool isInputPin = inputPin != nullptr;
-	OBSBlueprintPin* pin = inputPin;
-	if(!isInputPin) pin = outputPin;
+	OBSBlueprintPin* pin = getBlueprintPin();
 	PinType pinType = pin->getPinType();
 
 	drawPinContent(painter, pinType);
@@ -35,42 +36,16 @@ void GUIPin::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 	else drawRightPinCorners(painter);
 }
 
+OBSBlueprintPin * GUIPin::getBlueprintPin() const
+{
+	if(inputPin != nullptr) return inputPin;
+	return outputPin;
+}
+
+
 void GUIPin::drawPinContent(QPainter *painter, PinType pinType)
 {
-	QColor color;
-	switch (pinType) {
-	case UNKNOWN_PIN:
-		color = Qt::gray;
-		break;
-	case AUDIOVIDEO_PIN:
-		color = Qt::darkMagenta;
-		break;
-	case AUDIO_PIN:
-		color = Qt::darkRed;
-		break;
-	case VIDEO_PIN:
-		color = Qt::blue;
-		break;
-	case BYTE_PIN:
-		color = Qt::darkCyan;
-		break;
-	case INT_PIN:
-		color = Qt::cyan;
-		break;
-	case FLOAT_PIN:
-		color = Qt::green;
-		break;
-	case CHAR_PIN:
-		color = Qt::darkYellow;
-		break;
-	case STRING_PIN:
-		color = Qt::yellow;
-		break;
-	case COLOR_PIN:
-		color = Qt::white;
-		break;
-	}
-	painter->fillRect(QRect(0, 0, GUI_PIN_SIZE, GUI_PIN_SIZE), color);
+	painter->fillRect(QRect(0, 0, GUI_PIN_SIZE, GUI_PIN_SIZE), GetPinColor(pinType));
 }
 
 void GUIPin::drawTopPinCorners(QPainter *painter)
