@@ -1,6 +1,8 @@
 ﻿#pragma once
-#include <obs-module.h>
-#include "obs-blueprint-pin.h"
+
+class OBSBlueprintPin;
+class OBSBlueprintInputPin;
+class OBSBlueprintOutputPin;
 
 /**
  * OBS Blueprint connector class. Used to associate a parent output pin with a child input pin.
@@ -16,27 +18,13 @@ public:
 	 * @param to The child input pin.
 	 * @see PinType
 	 */
-	OBSBlueprintConnector(OBSBlueprintOutputPin* from, OBSBlueprintInputPin* to) : fromPin(from), toPin(to)
-	{
-		if(fromPin->connector != nullptr) // TODO std::runtime_error instead ?
-			blog(LOG_ERROR, "Trying to create a connector on output pin that already have a connector assigned (%p)! Unexpected behavior may happen!", fromPin->connector);
-		if(toPin->connector != nullptr)
-			blog(LOG_ERROR, "Trying to create a connector on input pin that already have a connector assigned (%p)! Unexpected behavior may happen!", toPin->connector);
-		if(fromPin->pinType != toPin->pinType)
-			blog(LOG_ERROR, "Connecting output pin of type [%s] with input pin of type [%s], which are not same type! Unexpected behavior may happen!", PinName[fromPin->pinType], PinName[toPin->pinType]);
-
-		fromPin->connector = this;
-		toPin->connector = this;
-	}
+	OBSBlueprintConnector(OBSBlueprintOutputPin* from, OBSBlueprintInputPin* to);
 
 	/**
 	 * OBS Blueprint connector destructor. When a connector is destroyed, remove it on the connected pin too.
 	 */
-	~OBSBlueprintConnector()
-	{
-		fromPin->connector = nullptr;
-		toPin->connector = nullptr;
-	}
+	~OBSBlueprintConnector();
+
 
 	/**
 	 * Get the parent output pin \a ptr.
@@ -54,19 +42,9 @@ public:
 	 * Propagate the data from the parent output pin to the child input pin.\n\n
 	 * \b NOTE: This function use C function \c memcpy() to copy the data between the pins.
 	 */
-	void propagateData()
-	{
-		unsigned int size = fromPin->rawValueSize;
-		unsigned int otherSize = toPin->rawValueSize;
-		if(size != otherSize) {
-			blog(LOG_ERROR, "SIZE MISMATCH when trying to propagate data, unexpected behavior may happen! [%u] --> [%u]", size, otherSize);
-			size = std::min(size, otherSize);
-		}
-		memcpy(toPin->rawValuePtr, fromPin->rawValuePtr, size);
-	}
+	void propagateData();
 
 private:
 	OBSBlueprintOutputPin* fromPin = nullptr;
 	OBSBlueprintInputPin* toPin = nullptr;
-
 };

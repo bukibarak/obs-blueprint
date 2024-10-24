@@ -1,10 +1,12 @@
 ﻿#pragma once
 #include <functional>
+#include <string>
+
+#include "Helpers/global-logger.h"
 
 class OBSBlueprintConnector;
 class OBSBlueprintGraph;
 class OBSBlueprintNode;
-class GUIPin;
 
 /**
  * All OBS Blueprint pin types that can be used with GUI graph.
@@ -104,14 +106,25 @@ public:
 	 */
 	template<class T> void setValue(const T& value) { *static_cast<T*>(rawValuePtr) = value; }
 
+	/**
+	 * Get the pin display name string reference (const to prevent editing name)
+	 * @return The pin name.
+	 */
+	const char* getDisplayName() const { return displayName.c_str(); }
+
 protected:
 
 	// Constructors (protected to prevent direct use of the class)
-	OBSBlueprintPin(OBSBlueprintNode* parent) : parentNode(parent) {}
-	OBSBlueprintPin(OBSBlueprintGraph* parent) : parentGraph(parent) {}
+	OBSBlueprintPin(const PinType& type, OBSBlueprintNode* parent, std::string name) : displayName(std::move(name)), pinType(type), parentNode(parent) {}
+	OBSBlueprintPin(const PinType& type, OBSBlueprintGraph* parent, std::string name) : displayName(std::move(name)), pinType(type), parentGraph(parent) {}
 
 	// Call onDestructor in order to delete value ptr
-	virtual ~OBSBlueprintPin() {if(onDestructor) onDestructor();}
+	virtual ~OBSBlueprintPin()
+	{
+		if(onDestructor) onDestructor();
+		else GWarn("Couldn't delete pin value ptr, possible memory leak!");
+		GInfo("%s '%s' destroyed", PinName[pinType], getDisplayName());
+	}
 
 	template<class T> void initializeValue(const T& defaultValue)
 	{
@@ -121,9 +134,11 @@ protected:
 	}
 
 	std::function<void()> onDestructor;
-	PinType pinType = UNKNOWN_PIN;
 
 private:
+
+	std::string displayName;
+	PinType pinType = UNKNOWN_PIN;
 
 	void* rawValuePtr = nullptr;
 	unsigned int rawValueSize = 0;
@@ -148,21 +163,23 @@ public:
 	 * @param type The pin type. @see PinType.
 	 * @param parent The node associated to the output pin.
 	 * @param initialValue The pin initial value. Will be copied to the pin value ptr.
+	 * @param displayName The pin name.
 	 * @return The output pin created object ptr.
 	 * @see OBSBlueprintNode::createOutputPin()
 	 * @see OBSBlueprintNode::addOutputPin()
 	 */
-	template<class T> static OBSBlueprintOutputPin* CreateAndInitialize(const PinType& type, OBSBlueprintNode* parent, const T& initialValue)
+	template<class T> static OBSBlueprintOutputPin* CreateAndInitialize(const PinType& type, OBSBlueprintNode* parent, const T& initialValue, const std::string& displayName = "")
 	{
-		OBSBlueprintOutputPin* pin = new OBSBlueprintOutputPin(type, parent);
+		OBSBlueprintOutputPin* pin = new OBSBlueprintOutputPin(type, parent, displayName);
 		pin->initializeValue(initialValue);
+		GInfo("Created and initialized output pin '%s' of type %s", displayName.c_str(), PinName[type]);
 		return pin;
 	}
 
 private:
 
 	// Private constructor, use static function instead
-	OBSBlueprintOutputPin(const PinType& type, OBSBlueprintNode* parent) : OBSBlueprintPin(parent) {pinType = type;}
+	OBSBlueprintOutputPin(const PinType& type, OBSBlueprintNode* parent, const std::string& name) : OBSBlueprintPin(type, parent, name){}
 };
 
 /**
@@ -179,14 +196,16 @@ public:
 	 * @param type The pin type. @see PinType.
 	 * @param parent The node associated to the input pin.
 	 * @param initialValue The pin initial value. Will be copied to the pin value ptr.
+	 * @param displayName The pin name.
 	 * @return The input pin created object ptr.
 	 * @see OBSBlueprintNode::createInputPin()
 	 * @see OBSBlueprintNode::addInputPin()
 	 */
-	template<class T> static OBSBlueprintInputPin* CreateAndInitialize(const PinType& type, OBSBlueprintNode* parent, const T& initialValue)
+	template<class T> static OBSBlueprintInputPin* CreateAndInitialize(const PinType& type, OBSBlueprintNode* parent, const T& initialValue, const std::string& displayName = "")
 	{
-		OBSBlueprintInputPin* pin = new OBSBlueprintInputPin(type, parent);
+		OBSBlueprintInputPin* pin = new OBSBlueprintInputPin(type, parent, displayName);
 		pin->initializeValue(initialValue);
+		GInfo("Created and initialized input pin '%s' of type %s", displayName.c_str(), PinName[type]);
 		return pin;
 	}
 
@@ -197,12 +216,14 @@ public:
 	 * @param type The pin type. @see PinType.
 	 * @param parent The graph associated to the input pin.
 	 * @param initialValue The pin initial value. Will be copied to the pin value ptr.
+	 * @param displayName The pin name.
 	 * @return The input pin created object ptr.
 	 */
-	template<class T> static OBSBlueprintInputPin* CreateAndInitialize(const PinType& type, OBSBlueprintGraph* parent, const T& initialValue)
+	template<class T> static OBSBlueprintInputPin* CreateAndInitialize(const PinType& type, OBSBlueprintGraph* parent, const T& initialValue, const std::string& displayName = "")
 	{
-		OBSBlueprintInputPin* pin = new OBSBlueprintInputPin(type, parent);
+		OBSBlueprintInputPin* pin = new OBSBlueprintInputPin(type, parent, displayName);
 		pin->initializeValue(initialValue);
+		GInfo("Created and initialized graph input pin '%s' of type %s", displayName.c_str(), PinName[type]);
 		return pin;
 	}
 
@@ -210,11 +231,11 @@ public:
 	 * Override this function to indicate if the pin should propagate the \a tick to the parent node connected to it.
 	 * Not ticking unnecessary parent nodes can improve performance.
 	 */
-	std::function<bool()> shouldPropagateTick = []() { return true; };
+	std::function<bool()> shouldPropagateTick = [] { return true; };
 
 private:
 	// Private constructor, use static function instead
-	OBSBlueprintInputPin(const PinType& type, OBSBlueprintNode* parent) : OBSBlueprintPin(parent) {pinType = type;}
+	OBSBlueprintInputPin(const PinType& type, OBSBlueprintNode* parent, const std::string& name) : OBSBlueprintPin(type, parent, name){}
 	// Private constructor, use static function instead
-	OBSBlueprintInputPin(const PinType& type, OBSBlueprintGraph* parent) : OBSBlueprintPin(parent) {pinType = type;}
+	OBSBlueprintInputPin(const PinType& type, OBSBlueprintGraph* parent, const std::string& name) : OBSBlueprintPin(type, parent, name){}
 };

@@ -21,7 +21,7 @@ OBSGraphicsScene::OBSGraphicsScene(OBSBlueprintGraph *linkedGraph,
 
 	// Add the grid lines
 	for (int x=-GRID_HALF_SIZE; x<=GRID_HALF_SIZE; x+=100) {
-		QPen pen(x == 0 ? Qt::white : (x%500 == 0 ? Qt::lightGray : Qt::darkGray));
+		QPen pen(x == 0 ? Qt::white : x%500 == 0 ? Qt::lightGray : Qt::darkGray);
 		addLine(x,-GRID_HALF_SIZE,x,GRID_HALF_SIZE,pen);
 		addLine(-GRID_HALF_SIZE, x, GRID_HALF_SIZE, x, pen);
 
@@ -32,6 +32,10 @@ OBSGraphicsScene::OBSGraphicsScene(OBSBlueprintGraph *linkedGraph,
 			addLine(-GRID_HALF_SIZE, x-1, GRID_HALF_SIZE, x-1, pen);
 		}
 	}
+
+	graphVideoInputPin = new GUIPin(graph->getMainVideoInputPin());
+	graphVideoInputPin->setScale(3);
+	addItem(graphVideoInputPin);
 }
 
 void OBSGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -47,7 +51,7 @@ void OBSGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 		if(event->button() == Qt::LeftButton) {
 			pressedButton = Qt::LeftButton;
 			if(pressedPin != nullptr) {
-				// Left click on pin
+				// Left click begin on pin
 				QPen pen(GUIPin::GetPinColor(pressedPin->getBlueprintPin()->getPinType()));
 				pen.setWidth(10);
 				QPointF p = pressedPin->scenePos();
@@ -55,23 +59,24 @@ void OBSGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 				dragConnector = addLine(p.x(),p.y(), event->scenePos().x(), event->scenePos().y(), pen);
 			}
 			else if(pressedNode != nullptr) {
-				// Left click on node
+				// Left-click begin on node
 				QApplication::setOverrideCursor(Qt::OpenHandCursor);
 				pressedPosRelative = event->scenePos() - pressedNode->pos();
 			}
 			else {
-				// Left click on the graph
+				// Left-click begin on the graph
 				view->setDragMode(QGraphicsView::RubberBandDrag);
 				QApplication::setOverrideCursor(Qt::CrossCursor);
 			}
 		}
 		else if(event->button() == Qt::RightButton) {
+			// Right-click begin on the graph
 			pressedButton = Qt::RightButton;
 			view->setDragMode(QGraphicsView::ScrollHandDrag);
 			QApplication::setOverrideCursor(QCursor(Qt::ClosedHandCursor));
 		}
 
-		qDebug() << "Mouse button #" << event->button() << "pressed at [" << event->scenePos() << "]";
+		// qDebug() << "Mouse button #" << event->button() << "pressed at [" << event->scenePos() << "]";
 	}
 }
 
@@ -84,7 +89,7 @@ void OBSGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 			mouseClickEvent(event);
 		} else {
 			if(pressedButton == Qt::LeftButton) {
-				//TODO left moving click end --> end of rubber band (select all nodes inside) OR end of dragConnector (check if connection is ok)
+				//TODO left moving click end --> end of rubber band (select all nodes inside)
 				if(pressedPin != nullptr) {
 					removeItem(dragConnector);
 					delete dragConnector;
@@ -94,20 +99,16 @@ void OBSGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 							&& destinationPin != pressedPin // Cannot connect pin to itself
 							&& destinationPin->getBlueprintPin()->getPinType() == pressedPin->getBlueprintPin()->getPinType() // Pins must be the same type
 							&& destinationPin->isInputPin() != pressedPin->isInputPin() // 1 pin should be input and the other output
-							&& !destinationPin->getBlueprintPin()->isConnected() // pin should not already be connected
-							&& !pressedPin->getBlueprintPin()->isConnected()) { // pin should not already be connected
-						GUIConnector* guiConnector;
+							&& !destinationPin->getBlueprintPin()->isConnected() // destination pin should not already be connected
+							&& !pressedPin->getBlueprintPin()->isConnected()) { // pressed pin should not already be connected
 						if(pressedPin->isInputPin()) {
 							OBSBlueprintConnector* connector = graph->createConnector(destinationPin->getOutputPin(), pressedPin->getInputPin());
-							guiConnector = new GUIConnector(connector, destinationPin, pressedPin);
+							addGUIConnector(connector, destinationPin, pressedPin);
 						}
 						else {
 							OBSBlueprintConnector* connector = graph->createConnector(pressedPin->getOutputPin(), destinationPin->getInputPin());
-							guiConnector = new GUIConnector(connector, pressedPin, destinationPin);
+							addGUIConnector(connector, pressedPin, destinationPin);
 						}
-						pressedPin->getParentNode()->GUIOnly_addConnector(guiConnector);
-						destinationPin->getParentNode()->GUIOnly_addConnector(guiConnector);
-						addItem(guiConnector);
 					}
 				}
 
@@ -116,7 +117,7 @@ void OBSGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 				//TODO right moving click end --> do noting?
 			}
 		}
-		qDebug() << "Mouse button #" << event->button() << "released at [" << event->scenePos() << "]";
+		// qDebug() << "Mouse button #" << event->button() << "released at [" << event->scenePos() << "]";
 	}
 	pressedButton = Qt::NoButton;
 	pressedPin = nullptr;
@@ -135,21 +136,36 @@ void OBSGraphicsScene::mouseClickEvent(QGraphicsSceneMouseEvent *event)
 	else if(pressedButton == Qt::RightButton) {
 		QApplication::changeOverrideCursor(Qt::ArrowCursor);
 		if(pressedNode != nullptr) {
+			// Right-click on node
 			QMessageBox::StandardButton response = QMessageBox::question(
 						view->viewport(),
 						"Delete node?",
-						QString::fromStdString("Are you sure that you want to delete the node '" + pressedNode->getDisplayName() + "' ?"),
+						QString::fromStdString("Are you sure that you want to delete the node '" + std::string(pressedNode->getBlueprintNode()->getDisplayName()) + "' ?"),
 						QMessageBox::Yes | QMessageBox::No
 					);
 			if(response == QMessageBox::Yes) {
 				graph->deleteNode(pressedNode->getBlueprintNode());
 				for(auto connector: pressedNode->GUIOnly_getConnectors()) {
+					if(GUINode* other = connector->getOtherNode(pressedNode)) {
+						other->GUIOnly_removeConnector(connector); // Remove connector to other node list
+						other->update();
+					}
 					removeItem(connector); // Delete node connectors
 				}
 				removeItem(pressedNode); // Delete node itself (will delete node pin's too)
 			}
 		}
+		else if(GUIConnector* pressedConnector = getGUIConnectorAt(event->scenePos())) {
+			// Right-click on connector
+			graph->deleteConnector(pressedConnector->getBlueprintConnector());
+			pressedConnector->getFromPin()->getParentNode()->GUIOnly_removeConnector(pressedConnector);
+			pressedConnector->getFromPin()->update();
+			pressedConnector->getToPin()->getParentNode()->GUIOnly_removeConnector(pressedConnector);
+			pressedConnector->getToPin()->update();
+			removeItem(pressedConnector);
+		}
 		else {
+			// Right-click on the graph
 			QMenu mouseContextMenu;
 			auto actions = ContextMenuHelper::InitializeMenu(mouseContextMenu);
 			QAction* choosen = mouseContextMenu.exec(event->screenPos());
@@ -169,11 +185,13 @@ void OBSGraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 	if(pressedButton == Qt::LeftButton) {
 		if(pressedPin != nullptr) {
+			// Moving from a pin --> update dragConnector
 			QPointF p = pressedPin->scenePos();
 			p += QPointF(GUI_PIN_SIZE/2, GUI_PIN_SIZE/2);
 			dragConnector->setLine(p.x(), p.y(), event->scenePos().x(), event->scenePos().y());
 		}
 		else if(pressedNode != nullptr) {
+			// Moving from a node --> move node
 			QApplication::changeOverrideCursor(Qt::ClosedHandCursor);
 			pressedNode->setPos(event->scenePos() - pressedPosRelative);
 			for(auto connector : pressedNode->GUIOnly_getConnectors()) {
@@ -182,10 +200,11 @@ void OBSGraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 		}
 	}
 	else if(pressedButton == Qt::RightButton) {
+		// Moving from the graph --> move view scene render bounds (done with scrollbars)
 		QPointF movement = event->lastScreenPos() - event->screenPos(); // B - A
 		view->horizontalScrollBar()->setValue(view->horizontalScrollBar()->value() + static_cast<int>(movement.x()));
 		view->verticalScrollBar()->setValue(view->verticalScrollBar()->value() + static_cast<int>(movement.y()));
-		qDebug() << "Mouse moved at [" << movement << "]";
+		// qDebug() << "Mouse moved at [" << movement << "]";
 	}
 }
 
@@ -225,6 +244,17 @@ void OBSGraphicsScene::addGUINode(OBSBlueprintNode *node, qreal px,
 	addItem(guiNode);
 }
 
+void OBSGraphicsScene::addGUIConnector(OBSBlueprintConnector *connector,
+	GUIPin *from, GUIPin *to)
+{
+	GUIConnector* guiConnector = new GUIConnector(connector, from, to);
+	from->getParentNode()->GUIOnly_addConnector(guiConnector);
+	from->update();
+	to->getParentNode()->GUIOnly_addConnector(guiConnector);
+	to->update();
+	addItem(guiConnector);
+}
+
 GUINode * OBSGraphicsScene::getGUINodeAt(const QPointF &scenePos) const
 {
 	// Get the graphics items at the mouse click position
@@ -234,6 +264,21 @@ GUINode * OBSGraphicsScene::getGUINodeAt(const QPointF &scenePos) const
 	for(auto item: items) {
 		if(item->type() == GUINode::Type) {
 			return dynamic_cast<GUINode*>(item->toGraphicsObject());
+		}
+	}
+	return nullptr;
+}
+
+GUIConnector * OBSGraphicsScene::getGUIConnectorAt(
+	const QPointF &scenePos) const
+{
+	// Get the graphics items at the mouse click position
+	QList<QGraphicsItem*> items = view->items(view->mapFromScene(scenePos));
+
+	// Check if the item is of type GUINode
+	for(auto item: items) {
+		if(item->type() == GUIConnector::Type) {
+			return dynamic_cast<GUIConnector*>(item->toGraphicsObject());
 		}
 	}
 	return nullptr;

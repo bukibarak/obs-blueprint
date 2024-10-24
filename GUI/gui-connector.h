@@ -3,6 +3,7 @@
 #include <QGraphicsObject>
 #include "Core/obs-blueprint-connector.h"
 
+class GUINode;
 class GUIPin;
 
 class GUIConnector : public QGraphicsObject {
@@ -14,6 +15,11 @@ public:
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 	int type() const override {return Type;}
 
+	OBSBlueprintConnector* getBlueprintConnector() const {return connector;}
+	GUIPin* getFromPin() const {return from;}
+	GUIPin* getToPin() const {return to;}
+	GUIPin* getOther(GUIPin* self) const {return self == from ? to : self == to ? from : nullptr;}
+	GUINode* getOtherNode(GUINode* self) const;
 	void redrawConnector();
 
 private:

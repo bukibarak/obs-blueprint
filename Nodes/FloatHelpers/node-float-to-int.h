@@ -4,24 +4,20 @@
 
 class NodeFloatToInt : public OBSBlueprintNode {
 public:
-	NodeFloatToInt()
+	NodeFloatToInt() : OBSBlueprintNode(obs_module_text("NodeFloatToInt"))
 	{
-		displayName = obs_module_text("NodeFloatToInt");
-
-		floatPin = createInputPin(FLOAT_PIN, 0.0f);
-		intPin = createOutputPin(INT_PIN, 0);
+		floatPin = createInputPin(FLOAT_PIN, 0.0f, "value (float)");
+		intPin = createOutputPin(INT_PIN, 0, "result (int)");
 	}
 
 	void execute(float deltaSeconds) override
 	{
-		float rawValue = *floatPin->getValuePtr<float>();
-		int32_t value = static_cast<int32_t>(std::round(rawValue));
-		intPin->setValue(value);
+		intPin->setValue(static_cast<int32_t>(std::round(*floatPin->getValuePtr<float>())));
 		haveExecutedThisCycle = true;
 	}
 
-	OBSBlueprintInputPin* getFloatInputPin() const { return floatPin; }
-	OBSBlueprintOutputPin* getIntOutputPin() const { return intPin; }
+	OBSBlueprintInputPin* getInputPin() const { return floatPin; }
+	OBSBlueprintOutputPin* getOutputPin() const { return intPin; }
 
 private:
 	OBSBlueprintInputPin* floatPin;

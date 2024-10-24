@@ -1,5 +1,7 @@
 ﻿#include "obs-blueprint-graph.h"
 
+#include "obs-blueprint-node.h"
+#include "obs-blueprint-connector.h"
 #include "GUI/gui-graph.h"
 #include "Nodes/node-color-source.h"
 #include "Nodes/FloatHelpers/node-float-to-int.h"
@@ -10,8 +12,9 @@
 extern "C" {
 	OBSBlueprintGraph::OBSBlueprintGraph()
 	{
-		blog(LOG_DEBUG, "[OBS BLUEPRINT] Graph created!");
-		mainVideoInput = OBSBlueprintInputPin::CreateAndInitialize(VIDEO_PIN, this, video_frame());
+		blog(LOG_DEBUG, "\n");
+		GDebug("======== Begin graph creation ========");
+		mainVideoInput = OBSBlueprintInputPin::CreateAndInitialize(VIDEO_PIN, this, video_frame(), "Main Video");
 
 		NodeColorSource* colorSourceNode = new NodeColorSource(300, 100,0xFFAA3FBB);
 		addNode(colorSourceNode);
@@ -28,32 +31,35 @@ extern "C" {
 		// NodeSinusTime* sinusTimeNode = new NodeSinusTime(2.0f, 300.0f);
 		// addNode(sinusTimeNode);
 		// createConnector(sinusTimeNode->getResultPin(), absNode->getInputPin());
-
+		GDebug("=========== Graph created! ===========\n\n");
 	}
 
 	OBSBlueprintGraph::~OBSBlueprintGraph()
 	{
+		blog(LOG_INFO, "\n");
+		GDebug("============== Begin graph destroy ==============\n");
 		delete guiGraph;
+
+		GInfo("Deleting [%zu] connectors...", graphConnectors.size());
 		for(auto connector : graphConnectors) {
 			delete connector;
 		}
-		blog(LOG_DEBUG, "[OBS BLUEPRINT] Graph connectors deleted!");
+		GInfo("Connectors destroyed!\n");
 
+		GInfo("Deleting [%zu] nodes...", graphNodes.size());
 		for(auto node : graphNodes) {
 			delete node;
 		}
-		blog(LOG_DEBUG, "[OBS BLUEPRINT] Graph nodes deleted!");
+		GInfo("Nodes destroyed!\n");
 
 		delete mainVideoInput;
-		blog(LOG_DEBUG, "[OBS BLUEPRINT] Graph video input pin deleted!");
-
-		blog(LOG_DEBUG, "[OBS BLUEPRINT] Graph deleted!");
+		blog(LOG_DEBUG, "\n");
+		GDebug("================ Graph destroyed ================\n\n");
 	}
 
 
 	void OBSBlueprintGraph::sourcePropertiesClick()
 	{
-		blog(LOG_DEBUG, "[OBS BLUEPRINT] Graph source properties clicked!");
 		if(guiGraph == nullptr) {
 			guiGraph = new GUIGraph(this);
 		}
@@ -67,42 +73,34 @@ extern "C" {
 		// If the main video input pin is connected, use it to call tick() on parent node
 		if(mainVideoInput->isConnected()) {
 			if(mainVideoInput->getConnector()->getFromPin() == nullptr || mainVideoInput->getConnector()->getFromPin()->getParentNode() == nullptr) {
-				blog(LOG_ERROR, "Graph video input pin is connected, but no corresponding pin and/or node was found!");
+				GError("Graph main video pin is connected, but no corresponding pin/node was found! OBS scene will not be updated!");
 			} else {
 				// Use connector to call tick on parent node
 				mainVideoInput->getConnector()->getFromPin()->getParentNode()->tick(deltaSeconds);
 
 				// Propagate data to main video input pin
 				mainVideoInput->getConnector()->propagateData();
-
-				// blog(LOG_DEBUG, "[OBS BLUEPRINT] after tick, main video graph input node is %ux%u", mainVideoInput->getValuePtr<video_frame>()->width, mainVideoInput->getValuePtr<video_frame>()->height);
 			}
 		}
 
 		onGraphEndTick.execute();
-
+		// GInfo("Graph main video is %ux%u", mainVideoInput->getValuePtr<video_frame>()->width, mainVideoInput->getValuePtr<video_frame>()->height);
 	}
 
-	pixel * OBSBlueprintGraph::getRenderPixels()
+	pixel * OBSBlueprintGraph::getRenderPixels() const
 	{
-		if(!mainVideoInput->isConnected()) {
-			blog(LOG_WARNING, "Graph video output pin is not connected!");
-			return nullptr;
-		}
-
-		pixel* pixels = mainVideoInput->getValuePtr<video_frame>()->pixels;
-		if(pixels == nullptr) {
-			blog(LOG_WARNING, "Graph video output pin is connected but no video frame found!");
-		}
+		video_frame* frame = mainVideoInput->getValuePtr<video_frame>();
+		pixel* pixels = frame->pixels;
+		if(pixels == nullptr && (frame->width > 0 || frame->height > 0)) GError("No frame found in graph main video pin! OBS will probably crash...");
 		return pixels;
 	}
 
-	uint32_t OBSBlueprintGraph::getWidth()
+	uint32_t OBSBlueprintGraph::getWidth() const
 	{
 		return mainVideoInput->getValuePtr<video_frame>()->width;
 	}
 
-	uint32_t OBSBlueprintGraph::getHeight()
+	uint32_t OBSBlueprintGraph::getHeight() const
 	{
 		return mainVideoInput->getValuePtr<video_frame>()->height;
 	}
@@ -111,30 +109,48 @@ extern "C" {
 OBSBlueprintConnector* OBSBlueprintGraph::createConnector(OBSBlueprintOutputPin *from,
                                         OBSBlueprintInputPin *to)
 {
-	if(from == nullptr || to == nullptr) {
-		blog(LOG_ERROR, "Graph connector pins cannot be null");
+	if(from == nullptr) {
+		GError("Cannot create connector, from pin is nullptr... Abort!");
+		return nullptr;
+	}
+	if(to == nullptr) {
+		GError("Cannot create connector, to pin is nullptr... Abort!");
 		return nullptr;
 	}
 
+	const char* fromParentName = from->getParentNode() ? from->getParentNode()->getDisplayName() : "NO_PARENT";
+	const char* toParentName = to->getParentNode() ? to->getParentNode()->getDisplayName() : to->getParentGraph() ? "Graph" : "NO_PARENT";
+
+	if(from->getPinType() != to->getPinType()) {
+		GError("Output pin '%s' (%s) of type %s does not match input pin '%s' (%s) type %s... Abort!",
+			from->getDisplayName(), fromParentName, PinName[from->getPinType()],
+			to->getDisplayName(), toParentName, PinName[to->getPinType()]
+		);
+	}
+
 	if(from->getConnector() != nullptr) {
-		blog(LOG_WARNING, "Graph connector given output pin is already connected! Deleting previous connector first... (will not be updated by GUI)");
+		GWarn("Output pin '%s' is already connected! Deleting previous connector first... (will not be updated by GUI)", from->getDisplayName());
 		deleteConnector(from->getConnector());
 	}
 
 	if(to->getConnector() != nullptr) {
-		blog(LOG_WARNING, "Graph connector given input pin is already connected! Deleting previous connector first... (will not be updated by GUI)");
+		GWarn("Input pin '%s' is already connected! Deleting previous connector first... (will not be updated by GUI)", to->getDisplayName());
 		deleteConnector(to->getConnector());
 	}
 
-
 	OBSBlueprintConnector* newConnector = new OBSBlueprintConnector(from, to);
 	graphConnectors.push_back(newConnector);
+	GInfo("Added connector from pin '%s' (%s) to pin '%s' (%s)", from->getDisplayName(), fromParentName, to->getDisplayName(), toParentName);
 	return newConnector;
 }
 
 void OBSBlueprintGraph::deleteConnector(OBSBlueprintConnector *connector)
 {
-	if(connector == nullptr) return;
+	if(connector == nullptr) {
+		GError("Cannot delete nullptr connector... Abort!");
+	}
+
+	if(connector->getToPin() == mainVideoInput) mainVideoInput->setValue(video_frame());
 
 	graphConnectors.remove(connector);
 	delete connector;

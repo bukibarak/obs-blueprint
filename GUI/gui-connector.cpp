@@ -43,6 +43,11 @@ void GUIConnector::paint(QPainter *painter,
 	}
 }
 
+GUINode * GUIConnector::getOtherNode(GUINode *self) const
+{
+	return self == from->getParentNode() ? to->getParentNode() : self == to->getParentNode() ? from->getParentNode() : nullptr;
+}
+
 void GUIConnector::redrawConnector()
 {
 	prepareGeometryChange();
@@ -66,7 +71,7 @@ void GUIConnector::redrawConnector()
 		bounds = QRectF(0, 0, qAbs(xMax - xMin), 1);
 	}
 	else {
-		bounds = QRectF(0, 0, abs(xMax - xMin), abs(yMax - yMin));
+		bounds = QRectF(0, 0, qAbs(xMax - xMin), qAbs(yMax - yMin));
 	}
 
 	setPos(xMin, yMin);

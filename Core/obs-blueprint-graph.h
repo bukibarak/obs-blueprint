@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "obs-blueprint-pin.h"
-#include "obs-blueprint-node.h"
 #include "Structs/multicast-delegate.h"
 #include "Structs/pixel.h"
 
@@ -16,9 +15,9 @@ public:
 	/* C function mapped with interface */
 	void sourcePropertiesClick();
 	void tick(float deltaSeconds);
-	pixel* getRenderPixels();
-	uint32_t getWidth();
-	uint32_t getHeight();
+	pixel* getRenderPixels() const;
+	uint32_t getWidth() const;
+	uint32_t getHeight() const;
 
 	/* C++ only functions */
 
@@ -46,6 +45,8 @@ public:
 	 * @param node The node that will be removed.
 	 */
 	void deleteNode(OBSBlueprintNode* node);
+
+	OBSBlueprintInputPin* getMainVideoInputPin() const {return mainVideoInput;}
 
 	multicastDelegate_OneParam<float> onGraphBeginTick;
 	multicastDelegate_ZeroParam onGraphEndTick;

@@ -2,8 +2,8 @@
 #include <QGraphicsObject>
 
 #include "gui-pin.h"
-#include "Core/obs-blueprint-node.h"
 
+class OBSBlueprintConnector;
 class GUIConnector;
 
 #define GUI_NODE_WIDTH 500
@@ -20,9 +20,9 @@ public:
 	int type() const override {return Type;}
 
 	OBSBlueprintNode* getBlueprintNode() const;
-	const std::string& getDisplayName() const;
 
 	void GUIOnly_addConnector(GUIConnector* connector);
+	void GUIOnly_removeConnector(GUIConnector* connector);
 	QList<GUIConnector*> GUIOnly_getConnectors() const {return attachedConnectors; }
 
 private:

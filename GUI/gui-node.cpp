@@ -2,6 +2,8 @@
 
 #include <QPainter>
 
+#include "Core/obs-blueprint-node.h"
+
 GUINode::GUINode(OBSBlueprintNode *node, QGraphicsItem *parent) : QGraphicsObject(parent), node(node)
 {
 	int leftPinPlaced = 0;
@@ -9,7 +11,8 @@ GUINode::GUINode(OBSBlueprintNode *node, QGraphicsItem *parent) : QGraphicsObjec
 	std::vector<OBSBlueprintInputPin*> topPins;
 	std::vector<OBSBlueprintOutputPin*> bottomPins;
 
-	for(OBSBlueprintInputPin* pin : node->inputPins) {
+
+	for(OBSBlueprintInputPin* pin : node->getInputPins()) {
 		if(GUIPin::IsVerticalPin(pin->getPinType())) {
 			topPins.push_back(pin);
 		}
@@ -19,7 +22,7 @@ GUINode::GUINode(OBSBlueprintNode *node, QGraphicsItem *parent) : QGraphicsObjec
 			++leftPinPlaced;
 		}
 	}
-	for(OBSBlueprintOutputPin* pin : node->outputPins) {
+	for(OBSBlueprintOutputPin* pin : node->getOutputPins()) {
 		if(GUIPin::IsVerticalPin(pin->getPinType())) {
 			bottomPins.push_back(pin);
 		}
@@ -76,7 +79,7 @@ void GUINode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 	font.setBold(true);
 	painter->setFont(font);
 	QTextOption textOption(Qt::AlignHCenter | Qt::AlignVCenter);
-	painter->drawText(textRect, QString::fromStdString(node->displayName), textOption);
+	painter->drawText(textRect, QString::fromStdString(node->getDisplayName()), textOption);
 
 }
 
@@ -85,12 +88,12 @@ OBSBlueprintNode * GUINode::getBlueprintNode() const
 	return node;
 }
 
-const std::string & GUINode::getDisplayName() const
-{
-	return node->displayName;
-}
-
 void GUINode::GUIOnly_addConnector(GUIConnector *connector)
 {
 	attachedConnectors.push_back(connector);
+}
+
+void GUINode::GUIOnly_removeConnector(GUIConnector *connector)
+{
+	attachedConnectors.removeOne(connector);
 }

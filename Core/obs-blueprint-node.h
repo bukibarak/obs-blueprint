@@ -1,52 +1,29 @@
 ﻿#pragma once
-#include <string>
-#include <list>
-#include <vector>
-#include "obs-blueprint-connector.h"
+#include <obs-module.h>
+
+#include "obs-blueprint-pin.h"
 #include "Structs/multicast-delegate.h"
 
-class GUINode;
+class OBSBlueprintConnector;
 
 /**
  * Base class for OBS Blueprint nodes. This class should never be used directly, only child classes.
  */
 class OBSBlueprintNode {
-	friend class GUINode;
 public:
+
+	/**
+	 * OBS Blueprint node destructor. This will also delete all pins related to this node.
+	 */
+	virtual ~OBSBlueprintNode();
+
 	/**
 	 * Internal function. Bind the node with the graph begin/end tick delegates.
 	 * @param beginTickDelegate The graph \c onGraphBeginTick delegate.
 	 * @param endTickDelegate The graph \c onGraphEndTick delegate.
 	 */
-	void setupGraphDelegates(multicastDelegate_OneParam<float>& beginTickDelegate, multicastDelegate_ZeroParam& endTickDelegate)
-	{
-		graphBeginTickDelegate = &beginTickDelegate;
-		graphEndTickDelegate = &endTickDelegate;
+	void setupGraphDelegates(multicastDelegate_OneParam<float>& beginTickDelegate, multicastDelegate_ZeroParam& endTickDelegate);
 
-		*graphBeginTickDelegate += graphBeginTick;
-		*graphEndTickDelegate += graphEndTick;
-	}
-
-	/**
-	 * OBS Blueprint node destructor. This will also delete all pins related to this node.
-	 */
-	virtual ~OBSBlueprintNode()
-	{
-		blog(LOG_DEBUG, "Blueprint node destructor called! (%p)", this);
-		for(auto inputPin : inputPins) {
-			delete inputPin;
-		}
-		for(auto outputPin : outputPins) {
-			delete outputPin;
-		}
-
-		if(graphBeginTickDelegate != nullptr) {
-			*graphBeginTickDelegate -= graphBeginTick;
-		}
-		if(graphEndTickDelegate != nullptr) {
-			*graphEndTickDelegate -= graphEndTick;
-		}
-	}
 
 	/**
 	 * OBS Blueprint node internal \c tick() function. This function do the following:
@@ -57,43 +34,7 @@ public:
 	 * 5. Call virtual function \c execute() that will be managed by the child classes.
 	 * @param deltaSeconds The time between this \a tick and the last \a tick.
 	 */
-	void tick(float deltaSeconds)
-	{
-		if(!haveTickedThisCycle) {
-			haveTickedThisCycle = true;
-			std::list<OBSBlueprintNode*> parentNodes;
-
-			// Check for all input pins if they are connected and should propagate tick to their parent node
-			for(OBSBlueprintInputPin* inputPin : inputPins) {
-				if(inputPin->isConnected() && inputPin->shouldPropagateTick()) {
-					if(inputPin->getConnector()->getFromPin() == nullptr || inputPin->getConnector()->getFromPin()->getParentNode() == nullptr) {
-						blog(LOG_ERROR, "Node input pin is connected, but no corresponding pin and/or node was found!");
-						continue;
-					}
-					// Add the parent node to the list
-					parentNodes.push_back(inputPin->getConnector()->getFromPin()->getParentNode());
-				}
-			}
-
-			// Remove parent node duplicates
-			parentNodes.unique();
-
-			// Call tick on all parent node
-			for(OBSBlueprintNode* parentNode : parentNodes) {
-				parentNode->tick(deltaSeconds);
-			}
-
-			// Propagate data to current node input pins
-			for(OBSBlueprintInputPin* inputPin : inputPins) {
-				if(inputPin != nullptr && inputPin->isConnected()) {
-					inputPin->getConnector()->propagateData();
-				}
-			}
-
-			// Call execute to perform current node process data
-			execute(deltaSeconds);
-		}
-	}
+	void tick(float deltaSeconds);
 
 	/**
 	 * Pure virtual execute function. All child node classes \b must override this function and add the node execution behavior on it.
@@ -111,23 +52,19 @@ public:
 	 * Get all connector linked with this node
 	 * @return A vector of all \c OBSBlueprintConnector* ptr.
 	 */
-	std::vector<OBSBlueprintConnector*> getAllConnectors() const
-	{
-		std::vector<OBSBlueprintConnector*> result;
-		for(OBSBlueprintInputPin* pin : inputPins) {
-			if(pin->isConnected()) {
-				result.push_back(pin->getConnector());
-			}
-		}
-		for(OBSBlueprintOutputPin* pin : outputPins) {
-			if(pin->isConnected()) {
-				result.push_back(pin->getConnector());
-			}
-		}
-		return result;
-	}
+	std::vector<OBSBlueprintConnector*> getAllConnectors() const;
+
+	const std::vector<OBSBlueprintInputPin*>& getInputPins() const {return inputPins;}
+	const std::vector<OBSBlueprintOutputPin*>& getOutputPins() const {return outputPins;}
+	const char* getDisplayName() const { return displayName.c_str(); }
 
 protected:
+
+	/**
+	 * OBS Blueprint node constructor.
+	 * @param name The node name.
+	 */
+	OBSBlueprintNode(std::string name = "");
 
 	/**
 	 * Add a new OBS Blueprint input pin to this node.\n\n
@@ -135,11 +72,12 @@ protected:
 	 * @tparam T The pin value data type (not as a pointer).
 	 * @param type The pin type. @see PinType.
 	 * @param defaultValue The pin initial value. Will be copied to the pin value \a ptr.
+	 * @param name The pin name.
 	 * @return The input pin created object \a ptr.
 	 */
-	template<class T>OBSBlueprintInputPin* createInputPin(PinType type, const T& defaultValue)
+	template<class T>OBSBlueprintInputPin* createInputPin(PinType type, const T& defaultValue, const std::string& name = "")
 	{
-		OBSBlueprintInputPin* pin = OBSBlueprintInputPin::CreateAndInitialize(type, this, defaultValue);
+		OBSBlueprintInputPin* pin = OBSBlueprintInputPin::CreateAndInitialize(type, this, defaultValue, name);
 		addInputPin(pin);
 		return pin;
 	}
@@ -149,7 +87,7 @@ protected:
 	 * When using this function, you don't need to handle the pin deletion.
 	 * @param inputPin The existing input pin.
 	 */
-	void addInputPin(OBSBlueprintInputPin* inputPin) {inputPins.push_back(inputPin);}
+	void addInputPin(OBSBlueprintInputPin* inputPin);
 
 	/**
 	 * Add a new OBS Blueprint output pin to this node.\n\n
@@ -157,21 +95,22 @@ protected:
 	 * @tparam T The pin value data type (not as a pointer).
 	 * @param type The pin type. @see PinType.
 	 * @param defaultValue The pin initial value. Will be copied to the pin value ptr.
+	 * @param name The pin name.
 	 * @return The output pin created object ptr.
 	 */
-	template<class T>OBSBlueprintOutputPin* createOutputPin(PinType type, const T& defaultValue)
+	template<class T>OBSBlueprintOutputPin* createOutputPin(PinType type, const T& defaultValue, const std::string& name = "")
 	{
-		OBSBlueprintOutputPin* pin = OBSBlueprintOutputPin::CreateAndInitialize(type, this, defaultValue);
+		OBSBlueprintOutputPin* pin = OBSBlueprintOutputPin::CreateAndInitialize(type, this, defaultValue, name);
 		addOutputPin(pin);
 		return pin;
 	}
 
 	/**
-	 * Add an existing OBS Blueprint ouptut pin to this node.\n\n
+	 * Add an existing OBS Blueprint output pin to this node.\n\n
 	 * When using this function, you don't need to handle the pin deletion.
 	 * @param outputPin The existing output pin.
 	 */
-	void addOutputPin(OBSBlueprintOutputPin* outputPin) {outputPins.push_back(outputPin);}
+	void addOutputPin(OBSBlueprintOutputPin* outputPin);
 
 
 	/**
@@ -187,12 +126,13 @@ protected:
 	 */
 	virtual void onGraphEndTick() {}
 
-	std::string displayName;
-
 	bool haveTickedThisCycle = false;
 	bool haveExecutedThisCycle = false;
 
+	std::string displayName;
+
 private:
+
 	multicastDelegate_OneParam<float>* graphBeginTickDelegate = nullptr;
 	multicastDelegate_ZeroParam* graphEndTickDelegate = nullptr;
 	std::function<void()> graphEndTick = [this]() {

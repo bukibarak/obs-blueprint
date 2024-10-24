@@ -3,17 +3,16 @@
 
 class NodeFloatAbs : public OBSBlueprintNode {
 public:
-	NodeFloatAbs()
+	NodeFloatAbs() : OBSBlueprintNode(obs_module_text("NodeFloatAbs"))
 	{
-		displayName = obs_module_text("NodeFloatAbs");
-
-		inputPin = createInputPin(FLOAT_PIN, 0.0f);
-		outputPin = createOutputPin(FLOAT_PIN, 0.0f);
+		inputPin = createInputPin(FLOAT_PIN, 0.0f, "value");
+		outputPin = createOutputPin(FLOAT_PIN, 0.0f, "result");
 	}
 
 	void execute(float deltaSeconds) override
 	{
 		outputPin->setValue(std::abs(*inputPin->getValuePtr<float>()));
+		haveExecutedThisCycle = true;
 	}
 
 	OBSBlueprintInputPin* getInputPin() const { return inputPin; }

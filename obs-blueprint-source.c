@@ -2,24 +2,10 @@
 #include "Core/obs-blueprint-c-interface.h"
 
 
-// Easy log with BlueprintOBS scene name
-#define slog(log_level, format, ...) \
-            blog(log_level, "[BlueprintOBS '%s'] " format, \
-                obs_source_get_name(context->video_source), ##__VA_ARGS__)
-
-#define debug(format, ...) blog(LOG_DEBUG, format, ##__VA_ARGS__) // debug, no scene
-#define sdebug(format, ...) slog(LOG_DEBUG, format, ##__VA_ARGS__) // debug with scene
-
-
 static const char *obs_blueprint_source_name(void* unused)
 {
     UNUSED_PARAMETER(unused);
     return obs_module_text("SourceName");
-}
-
-static void obs_blueprint_source_default(obs_data_t* settings)
-{
-	UNUSED_PARAMETER(settings);
 }
 
 static uint32_t obs_blueprint_source_width(void* data)
@@ -40,14 +26,6 @@ static obs_properties_t* obs_blueprint_source_properties(void* data)
 	c_blueprint_graph_properties_click(graph);
 
     return NULL;
-}
-
-static void obs_blueprint_source_update(void* data, obs_data_t* settings)
-{
-	UNUSED_PARAMETER(settings);
-	CPP_BlueprintGraphPtr graph = data;
-
-	debug("OBS SOURCE update");
 }
 
 static void* obs_blueprint_source_create(obs_data_t* settings, obs_source_t* source)
@@ -137,7 +115,6 @@ static void obs_blueprint_source_render(void* data, gs_effect_t* unused)
 
 static void obs_blueprint_source_tick(void* data, float seconds)
 {
-	// blog(LOG_DEBUG, "Scene tick with %.6f seconds", seconds);
 	CPP_BlueprintGraphPtr graph = data;
 	c_blueprint_graph_tick(graph, seconds);
 }
@@ -147,15 +124,13 @@ struct obs_source_info obs_blueprint_source = {
     .type = OBS_SOURCE_TYPE_INPUT,
     .output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_AUDIO |
 			OBS_SOURCE_CUSTOM_DRAW | OBS_SOURCE_DO_NOT_DUPLICATE |
-			OBS_SOURCE_SRGB | OBS_SOURCE_INTERACTION | OBS_SOURCE_CAP_DONT_SHOW_PROPERTIES,
+			OBS_SOURCE_SRGB,
     .get_name = obs_blueprint_source_name,
-    .get_defaults = obs_blueprint_source_default,
     .get_width = obs_blueprint_source_width,
     .get_height = obs_blueprint_source_height,
 	.get_properties = obs_blueprint_source_properties,
     .create = obs_blueprint_source_create,
     .destroy = obs_blueprint_source_destroy,
-    .update = obs_blueprint_source_update,
     .video_render = obs_blueprint_source_render,
     .video_tick = obs_blueprint_source_tick
 };

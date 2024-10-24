@@ -3,13 +3,19 @@
 
 #include "Core/obs-blueprint-node.h"
 
+class GUIPin;
+class GUINode;
+class GUIConnector;
+
 class OBSGraphicsScene : public QGraphicsScene {
 public:
 	OBSGraphicsScene(OBSBlueprintGraph* linkedGraph, QObject* parent = nullptr);
 
 	void setView(QGraphicsView* mainView) { view = mainView;}
 	void addGUINode(OBSBlueprintNode* node, qreal px, qreal py);
+	void addGUIConnector(OBSBlueprintConnector* connector, GUIPin* from, GUIPin* to);
 	GUINode* getGUINodeAt(const QPointF& scenePos) const;
+	GUIConnector* getGUIConnectorAt(const QPointF& scenePos) const;
 	void resetZoomLevel() {	zoomLevel = 0; }
 
 protected:
@@ -23,6 +29,7 @@ protected:
 private:
 
 	OBSBlueprintGraph* graph = nullptr;
+	GUIPin* graphVideoInputPin = nullptr;
 
 	int32_t zoomLevel = 0;
 	QGraphicsView* view = nullptr;
