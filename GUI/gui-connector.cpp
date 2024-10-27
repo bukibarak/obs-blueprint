@@ -16,11 +16,11 @@ GUIConnector::GUIConnector(OBSBlueprintConnector *connector, GUIPin *fromPin,
 void GUIConnector::paint(QPainter *painter,
 	const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-	qreal xMin = left->scenePos().x() + GUI_PIN_SIZE/2;
-	qreal xMax = right->scenePos().x() + GUI_PIN_SIZE/2;
+	qreal xMin = left->scenePos().x() + left->sceneBoundingRect().width()/2;
+	qreal xMax = right->scenePos().x() + right->sceneBoundingRect().width()/2;
 
-	qreal yMin = top->scenePos().y() + GUI_PIN_SIZE/2;
-	qreal yMax = bottom->scenePos().y() + GUI_PIN_SIZE/2;
+	qreal yMin = top->scenePos().y() + top->sceneBoundingRect().height()/2;
+	qreal yMax = bottom->scenePos().y() + bottom->sceneBoundingRect().height()/2;
 
 
 	painter->setPen(pen);
@@ -51,15 +51,15 @@ GUINode * GUIConnector::getOtherNode(GUINode *self) const
 void GUIConnector::redrawConnector()
 {
 	prepareGeometryChange();
-	left = from->scenePos().x() < to->scenePos().x() ? from : to;
+	left = from->scenePos().x() + from->sceneBoundingRect().width()/2 < to->scenePos().x() + to->sceneBoundingRect().width()/2 ? from : to;
 	right = left == from ? to : from;
-	qreal xMin = left->scenePos().x() + GUI_PIN_SIZE/2;
-	qreal xMax = right->scenePos().x() + GUI_PIN_SIZE/2;
+	qreal xMin = left->scenePos().x() + left->sceneBoundingRect().width()/2;
+	qreal xMax = right->scenePos().x() + right->sceneBoundingRect().width()/2;
 
-	top = from->scenePos().y() < to->scenePos().y() ? from : to;
+	top = from->scenePos().y() + from->sceneBoundingRect().height()/2 < to->scenePos().y() + to->sceneBoundingRect().height()/2 ? from : to;
 	bottom = top == from ? to : from;
-	qreal yMin = top->scenePos().y() + GUI_PIN_SIZE/2;
-	qreal yMax = bottom->scenePos().y() + GUI_PIN_SIZE/2;
+	qreal yMin = top->scenePos().y() + top->sceneBoundingRect().height()/2;
+	qreal yMax = bottom->scenePos().y() + bottom->sceneBoundingRect().height()/2;
 
 	if(xMin == xMax && yMin == yMax) {
 		// Both pins are in the same position, dunno what to do...

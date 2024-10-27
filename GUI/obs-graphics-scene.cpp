@@ -8,10 +8,12 @@
 #include <QGraphicsRectItem>
 #include <QMenu>
 #include <QMessageBox>
+#include <QResizeEvent>
 
 #include "context-menu-helper.h"
 #include "gui-connector.h"
 #include "gui-node.h"
+#include "obs-graphics-view.h"
 #include "Core/obs-blueprint-graph.h"
 
 OBSGraphicsScene::OBSGraphicsScene(OBSBlueprintGraph *linkedGraph,
@@ -33,9 +35,35 @@ OBSGraphicsScene::OBSGraphicsScene(OBSBlueprintGraph *linkedGraph,
 		}
 	}
 
+
+}
+
+void OBSGraphicsScene::initializeFromBlueprintGraph()
+{
+	// 1. Add main output pin
 	graphVideoInputPin = new GUIPin(graph->getMainVideoInputPin());
 	graphVideoInputPin->setScale(3);
+	pinMap[graph->getMainVideoInputPin()] = graphVideoInputPin;
+	forceGraphGUIOnBottom();
 	addItem(graphVideoInputPin);
+
+	// 2. Add all nodes
+	qreal posX = -1000;
+	for(auto node : graph->getNodes()) {
+		addGUINode(node, posX, 0);
+		posX -= 1000;
+	}
+
+	// 3. Add all connectors
+	for(auto connector: graph->getConnectors()) {
+		addGUIConnector(connector, pinMap[connector->getFromPin()], pinMap[connector->getToPin()]);
+	}
+}
+
+void OBSGraphicsScene::setView(OBSGraphicsView *mainView)
+{
+	view = mainView;
+	view->onResizeEvent += resizeFunc;
 }
 
 void OBSGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -55,7 +83,7 @@ void OBSGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 				QPen pen(GUIPin::GetPinColor(pressedPin->getBlueprintPin()->getPinType()));
 				pen.setWidth(10);
 				QPointF p = pressedPin->scenePos();
-				p += QPointF(GUI_PIN_SIZE/2, GUI_PIN_SIZE/2);
+				p += QPointF(pressedPin->sceneBoundingRect().width()/2, pressedPin->sceneBoundingRect().height()/2);
 				dragConnector = addLine(p.x(),p.y(), event->scenePos().x(), event->scenePos().y(), pen);
 			}
 			else if(pressedNode != nullptr) {
@@ -144,25 +172,12 @@ void OBSGraphicsScene::mouseClickEvent(QGraphicsSceneMouseEvent *event)
 						QMessageBox::Yes | QMessageBox::No
 					);
 			if(response == QMessageBox::Yes) {
-				graph->deleteNode(pressedNode->getBlueprintNode());
-				for(auto connector: pressedNode->GUIOnly_getConnectors()) {
-					if(GUINode* other = connector->getOtherNode(pressedNode)) {
-						other->GUIOnly_removeConnector(connector); // Remove connector to other node list
-						other->update();
-					}
-					removeItem(connector); // Delete node connectors
-				}
-				removeItem(pressedNode); // Delete node itself (will delete node pin's too)
+				removeGUINode(pressedNode);
 			}
 		}
 		else if(GUIConnector* pressedConnector = getGUIConnectorAt(event->scenePos())) {
 			// Right-click on connector
-			graph->deleteConnector(pressedConnector->getBlueprintConnector());
-			pressedConnector->getFromPin()->getParentNode()->GUIOnly_removeConnector(pressedConnector);
-			pressedConnector->getFromPin()->update();
-			pressedConnector->getToPin()->getParentNode()->GUIOnly_removeConnector(pressedConnector);
-			pressedConnector->getToPin()->update();
-			removeItem(pressedConnector);
+			removeGUIConnector(pressedConnector);
 		}
 		else {
 			// Right-click on the graph
@@ -187,7 +202,8 @@ void OBSGraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 		if(pressedPin != nullptr) {
 			// Moving from a pin --> update dragConnector
 			QPointF p = pressedPin->scenePos();
-			p += QPointF(GUI_PIN_SIZE/2, GUI_PIN_SIZE/2);
+			const QSizeF ps = pressedPin->sceneBoundingRect().size() / 2;
+			p += QPointF(ps.width(), ps.height());
 			dragConnector->setLine(p.x(), p.y(), event->scenePos().x(), event->scenePos().y());
 		}
 		else if(pressedNode != nullptr) {
@@ -204,6 +220,7 @@ void OBSGraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 		QPointF movement = event->lastScreenPos() - event->screenPos(); // B - A
 		view->horizontalScrollBar()->setValue(view->horizontalScrollBar()->value() + static_cast<int>(movement.x()));
 		view->verticalScrollBar()->setValue(view->verticalScrollBar()->value() + static_cast<int>(movement.y()));
+		forceGraphGUIOnBottom();
 		// qDebug() << "Mouse moved at [" << movement << "]";
 	}
 }
@@ -213,10 +230,12 @@ void OBSGraphicsScene::wheelEvent(QGraphicsSceneWheelEvent *event)
 	if(event->delta() < 0 && zoomLevel > -4) {
 		--zoomLevel;
 		view->scale(1.0/1.2, 1.0/1.2);
+		forceGraphGUIOnBottom();
 	}
 	else if(event->delta() > 0 && zoomLevel < 5) {
 		++zoomLevel;
 		view->scale(1.2, 1.2);
+		forceGraphGUIOnBottom();
 	}
 	qDebug() << "Zoom level: " << zoomLevel;
 }
@@ -235,24 +254,70 @@ GUIPin* OBSGraphicsScene::getGUIPinAt(const QPointF &scenePos) const
 	return nullptr;
 }
 
-void OBSGraphicsScene::addGUINode(OBSBlueprintNode *node, qreal px,
+void OBSGraphicsScene::forceGraphGUIOnBottom()
+{
+	if(graphVideoInputPin != nullptr && view != nullptr) {
+		QRectF viewport = view->getSceneViewport();
+		qreal pinWidth = graphVideoInputPin->sceneBoundingRect().width();
+		qreal pinHeight = graphVideoInputPin->sceneBoundingRect().height();
+		graphVideoInputPin->setPos(
+			viewport.x() + (( viewport.width()/ 2) - (pinWidth / 2)),
+			viewport.y() + (viewport.height() - pinHeight)
+		);
+		if(graphVideoInputPin->getConnector()) graphVideoInputPin->getConnector()->redrawConnector();
+	}
+}
+
+void OBSGraphicsScene::addGUINode(OBSBlueprintNode* node, qreal px,
                                   qreal py)
 {
+
 	GUINode* guiNode = new GUINode(node);
 	guiNode->setScale(1.5);
 	guiNode->setPos(px, py);
+
+	for(GUIPin* nodePin : guiNode->getGUIPins()) {
+		pinMap[nodePin->getBlueprintPin()] = nodePin;
+	}
+	nodeMap[node] = guiNode;
 	addItem(guiNode);
 }
 
-void OBSGraphicsScene::addGUIConnector(OBSBlueprintConnector *connector,
-	GUIPin *from, GUIPin *to)
+void OBSGraphicsScene::removeGUINode(GUINode *node)
+{
+	for(auto connector: node->GUIOnly_getConnectors()) {
+		removeGUIConnector(connector);
+	}
+	for(GUIPin* nodePin : node->getGUIPins()) {
+		pinMap.erase(nodePin->getBlueprintPin());
+	}
+
+	graph->deleteNode(node->getBlueprintNode());
+
+	nodeMap.erase(node->getBlueprintNode());
+	removeItem(node); // Delete node itself (will delete node pin's too)
+}
+
+void OBSGraphicsScene::addGUIConnector(OBSBlueprintConnector* connector,
+                                       GUIPin* from, GUIPin* to)
 {
 	GUIConnector* guiConnector = new GUIConnector(connector, from, to);
-	from->getParentNode()->GUIOnly_addConnector(guiConnector);
-	from->update();
-	to->getParentNode()->GUIOnly_addConnector(guiConnector);
-	to->update();
+	from->connect(guiConnector);
+	to->connect(guiConnector);
+
+	connectorMap[connector] = guiConnector;
 	addItem(guiConnector);
+}
+
+void OBSGraphicsScene::removeGUIConnector(GUIConnector *connector)
+{
+	graph->deleteConnector(connector->getBlueprintConnector());
+
+	if(GUIPin* from = connector->getFromPin()) from->disconnect();
+	if(GUIPin* to = connector->getToPin()) to->disconnect();
+
+	connectorMap.erase(connector->getBlueprintConnector());
+	removeItem(connector);
 }
 
 GUINode * OBSGraphicsScene::getGUINodeAt(const QPointF &scenePos) const

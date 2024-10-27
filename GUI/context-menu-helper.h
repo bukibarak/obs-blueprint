@@ -79,9 +79,9 @@ private:
 	}
 
 	inline static std::vector<ContextMenuEntry> entries{
+		ContextMenuEntry("/Numbers/Float", "Absolute value", []{return new NodeFloatAbs();}),
+		ContextMenuEntry("/Numbers/Float", "Float to Integer", []{return new NodeFloatToInt();}),
+		ContextMenuEntry("/Numbers/Float", "Sinus wave", []{return new NodeSinusTime(1.0f, 200.0f);}),
 		ContextMenuEntry("/Video", "Color Video source", []{return new NodeColorSource(100, 100, 0xFFFF00FF);}),
-		ContextMenuEntry("/Float", "Absolute value", []{return new NodeFloatAbs();}),
-		ContextMenuEntry("/Float", "Float to Integer", []{return new NodeFloatToInt();}),
-		ContextMenuEntry("/Float", "Sinus wave", []{return new NodeSinusTime(1.0f, 200.0f);}),
 	};
 };

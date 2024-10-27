@@ -16,6 +16,14 @@ OBSGraphicsView::OBSGraphicsView(QWidget *parent) : QGraphicsView(parent)
 	setDragMode(QGraphicsView::NoDrag);
 }
 
+QRectF OBSGraphicsView::getSceneViewport() const
+{
+	auto vp = viewport();
+	QPointF A = mapToScene(QPoint(0, 0));
+	QPointF B = mapToScene(QPoint(vp->width(), vp->height()));
+	return {A, B};
+}
+
 void OBSGraphicsView::resetScroll()
 {
 	mouseRightClick = true;
@@ -50,6 +58,13 @@ void OBSGraphicsView::scrollContentsBy(int dx, int dy)
 	if(canScrollContent()) {
 		QGraphicsView::scrollContentsBy(dx, dy);
 	}
+}
+
+void OBSGraphicsView::resizeEvent(QResizeEvent *event)
+{
+	QGraphicsView::resizeEvent(event);
+	qDebug() << "onResizeEvent called";
+	onResizeEvent.execute(event);
 }
 
 void OBSGraphicsView::wheelEvent(QWheelEvent *event)

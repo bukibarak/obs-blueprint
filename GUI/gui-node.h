@@ -21,12 +21,14 @@ public:
 
 	OBSBlueprintNode* getBlueprintNode() const;
 
-	void GUIOnly_addConnector(GUIConnector* connector);
-	void GUIOnly_removeConnector(GUIConnector* connector);
-	QList<GUIConnector*> GUIOnly_getConnectors() const {return attachedConnectors; }
+	const QList<GUIPin*>& getGUIPins() const {return nodePins;}
+
+	QList<GUIConnector*> GUIOnly_getConnectors() const;
 
 private:
-	QList<GUIConnector*> attachedConnectors;
+	QList<GUIPin*> nodePins;
+	QList<GUIPin*> leftPins;
+	QList<GUIPin*> rightPins;
 	OBSBlueprintNode* node;
 
 	QRect textRect{GUI_PIN_SIZE + 10, GUI_PIN_SIZE + 10, GUI_NODE_WIDTH - 20, 130};

@@ -23,6 +23,7 @@ OBSBlueprintNode::~OBSBlueprintNode()
 	if(graphEndTickDelegate != nullptr) *graphEndTickDelegate -= graphEndTick;
 	else GWarn("Node '%s' was not linked to graph end tick delegate, should have been done by graph on node creation!", getDisplayName());
 	GInfo("====== Node '%s' destroyed ======", getDisplayName());
+	MyLogger::Info("====== Node '%s' destroyed ======", getDisplayName());
 }
 
 void OBSBlueprintNode::setupGraphDelegates(

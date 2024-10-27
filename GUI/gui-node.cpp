@@ -17,8 +17,10 @@ GUINode::GUINode(OBSBlueprintNode *node, QGraphicsItem *parent) : QGraphicsObjec
 			topPins.push_back(pin);
 		}
 		else {
-			QGraphicsObject* guiPin = new GUIPin(pin, this);
+			GUIPin* guiPin = new GUIPin(pin, this);
 			guiPin->setPos(0, GUI_NODE_PINS_MARGIN + leftPinPlaced * GUI_PIN_SIZE * 2);
+			nodePins.push_back(guiPin);
+			leftPins.push_back(guiPin);
 			++leftPinPlaced;
 		}
 	}
@@ -27,8 +29,10 @@ GUINode::GUINode(OBSBlueprintNode *node, QGraphicsItem *parent) : QGraphicsObjec
 			bottomPins.push_back(pin);
 		}
 		else {
-			QGraphicsObject* guiPin = new GUIPin(pin, this);
+			GUIPin* guiPin = new GUIPin(pin, this);
 			guiPin->setPos(GUI_PIN_SIZE + GUI_NODE_WIDTH, GUI_NODE_PINS_MARGIN + rightPinPlaced * GUI_PIN_SIZE * 2);
+			nodePins.push_back(guiPin);
+			rightPins.push_back(guiPin);
 			++rightPinPlaced;
 		}
 	}
@@ -40,8 +44,9 @@ GUINode::GUINode(OBSBlueprintNode *node, QGraphicsItem *parent) : QGraphicsObjec
 
 		int beginTopPx = ((GUI_NODE_WIDTH + 2*GUI_PIN_SIZE)/2) - (topPinWidth/2);
 		for(int i=0; i < topPins.size(); i++) {
-			QGraphicsObject* guiPin = new GUIPin(topPins[i], this);
+			GUIPin* guiPin = new GUIPin(topPins[i], this);
 			guiPin->setPos(beginTopPx + i * GUI_PIN_SIZE * 2, 0);
+			nodePins.push_back(guiPin);
 		}
 	}
 
@@ -51,8 +56,9 @@ GUINode::GUINode(OBSBlueprintNode *node, QGraphicsItem *parent) : QGraphicsObjec
 
 		int beginBottomPx = ((GUI_NODE_WIDTH + 2*GUI_PIN_SIZE)/2) - (bottomPinWidth/2);
 		for(int i=0; i < bottomPins.size(); i++) {
-			QGraphicsObject* guiPin = new GUIPin(bottomPins[i], this);
+			GUIPin* guiPin = new GUIPin(bottomPins[i], this);
 			guiPin->setPos(beginBottomPx + i * GUI_PIN_SIZE * 2, GUI_PIN_SIZE + GUI_NODE_HEIGHT);
+			nodePins.push_back(guiPin);
 		}
 	}
 
@@ -74,12 +80,41 @@ void GUINode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 	painter->drawRect(QRect(GUI_PIN_SIZE, GUI_PIN_SIZE, GUI_NODE_WIDTH, GUI_NODE_HEIGHT));
 	painter->fillRect(QRect(textRect), Qt::darkGray);
 
+	painter->setBrush(Qt::white);
+
 	QFont font;
 	font.setPixelSize(40);
 	font.setBold(true);
 	painter->setFont(font);
 	QTextOption textOption(Qt::AlignHCenter | Qt::AlignVCenter);
-	painter->drawText(textRect, QString::fromStdString(node->getDisplayName()), textOption);
+	painter->drawText(textRect, node->getDisplayName(), textOption);
+
+	QFont font2;
+	font2.setPixelSize(25);
+	QFontMetricsF fm(font2);
+	painter->setFont(font2);
+
+	for(GUIPin* pin : leftPins) {
+		const char* pinText = pin->getBlueprintPin()->getDisplayName();
+		QSizeF textSize = fm.size(Qt::TextSingleLine, pinText) + QSizeF(30, 10);
+		QPointF textTopLeft = pin->pos();
+		QRectF pinBounds = pin->boundingRect();
+		textTopLeft += QPointF(pinBounds.width() + 10, pinBounds.height() / 2);
+		textTopLeft -= QPointF(0, textSize.height() / 2);
+		QRectF textBounds = QRectF(textTopLeft, textSize);
+		painter->fillRect(textBounds, Qt::black);
+		painter->drawText(textBounds, pinText, textOption);
+	}
+
+
+	// painter->setFont(font2);
+	// painter->setPen(Qt::black);
+	// painter->setBrush(Qt::black);
+	// for(GUIPin* pin : leftPins) {
+	// 	QSizeF pinSize = pin->boundingRect().size();
+	// 	QPointF p(pinSize.width() + 100, pinSize.height() / 2);
+	// 	painter->drawText(pin->pos() + p, pin->getBlueprintPin()->getDisplayName());
+	// }
 
 }
 
@@ -88,12 +123,13 @@ OBSBlueprintNode * GUINode::getBlueprintNode() const
 	return node;
 }
 
-void GUINode::GUIOnly_addConnector(GUIConnector *connector)
+QList<GUIConnector *> GUINode::GUIOnly_getConnectors() const
 {
-	attachedConnectors.push_back(connector);
-}
-
-void GUINode::GUIOnly_removeConnector(GUIConnector *connector)
-{
-	attachedConnectors.removeOne(connector);
+	QList<GUIConnector*> list;
+	for(GUIPin* pin: nodePins) {
+		if(pin->isConnected()) {
+			list.push_back(pin->getConnector());
+		}
+	}
+	return list;
 }

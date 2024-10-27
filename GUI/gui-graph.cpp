@@ -15,10 +15,7 @@ GUIGraph::GUIGraph(OBSBlueprintGraph *attachedGraph) : graph(attachedGraph)
 	scene->setView(view);
 	view->setScene(scene);
 
-	if(graph->graphNodes.size() != 0) {
-		scene->addGUINode(graph->graphNodes.front(), 500, 500);
-	}
-
+	scene->initializeFromBlueprintGraph();
 }
 
 GUIGraph::~GUIGraph()

@@ -7,7 +7,6 @@
 class GUIGraph;
 
 class OBSBlueprintGraph {
-	friend class GUIGraph;
 public:
 	OBSBlueprintGraph();
 	~OBSBlueprintGraph();
@@ -46,6 +45,8 @@ public:
 	 */
 	void deleteNode(OBSBlueprintNode* node);
 
+	const std::list<OBSBlueprintNode*>& getNodes() const {return graphNodes;}
+	const std::list<OBSBlueprintConnector*>& getConnectors() const {return graphConnectors;}
 	OBSBlueprintInputPin* getMainVideoInputPin() const {return mainVideoInput;}
 
 	multicastDelegate_OneParam<float> onGraphBeginTick;
@@ -55,8 +56,8 @@ private:
 
 	GUIGraph* guiGraph = nullptr;
 
-	std::list<OBSBlueprintConnector*> graphConnectors;
 	std::list<OBSBlueprintNode*> graphNodes;
+	std::list<OBSBlueprintConnector*> graphConnectors;
 
 	OBSBlueprintInputPin* mainVideoInput = nullptr;
 };

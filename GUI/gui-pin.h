@@ -2,6 +2,7 @@
 #include <QGraphicsObject>
 #include "Core/obs-blueprint-pin.h"
 
+class GUIConnector;
 class GUINode;
 
 #define GUI_PIN_SIZE 50
@@ -26,10 +27,16 @@ public:
 	static const QColor& GetPinColor(const PinType& type);
 
 	GUINode* getParentNode() const {return parentNode;}
+	GUIConnector* getConnector() const {return connector;}
+
+	void connect(GUIConnector* connector);
+	void disconnect();
+	bool isConnected() const {return connector != nullptr;}
 
 private:
 
-	GUINode* parentNode;
+	GUINode* parentNode = nullptr;
+	GUIConnector* connector = nullptr;
 
 	void drawPinContent(QPainter *painter, PinType pinType);
 	void drawTopPinCorners(QPainter *painter);

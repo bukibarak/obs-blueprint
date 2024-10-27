@@ -20,17 +20,17 @@ extern "C" {
 		addNode(colorSourceNode);
 		createConnector(colorSourceNode->getVideoPin(), mainVideoInput);
 
-		// NodeFloatToInt* floatToIntNode = new NodeFloatToInt();
-		// addNode(floatToIntNode);
-		// createConnector(floatToIntNode->getIntOutputPin(), colorSourceNode->getWidthPin());
-		//
-		// NodeFloatAbs* absNode = new NodeFloatAbs();
-		// addNode(absNode);
-		// createConnector(absNode->getOutputPin(), floatToIntNode->getFloatInputPin());
-		//
-		// NodeSinusTime* sinusTimeNode = new NodeSinusTime(2.0f, 300.0f);
-		// addNode(sinusTimeNode);
-		// createConnector(sinusTimeNode->getResultPin(), absNode->getInputPin());
+		NodeFloatToInt* floatToIntNode = new NodeFloatToInt();
+		addNode(floatToIntNode);
+		createConnector(floatToIntNode->getOutputPin(), colorSourceNode->getWidthPin());
+
+		NodeFloatAbs* absNode = new NodeFloatAbs();
+		addNode(absNode);
+		createConnector(absNode->getOutputPin(), floatToIntNode->getInputPin());
+
+		NodeSinusTime* sinusTimeNode = new NodeSinusTime(5.0f, 800.0f);
+		addNode(sinusTimeNode);
+		createConnector(sinusTimeNode->getResultPin(), absNode->getInputPin());
 		GDebug("=========== Graph created! ===========\n\n");
 	}
 

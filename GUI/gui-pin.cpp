@@ -6,7 +6,6 @@
 
 GUIPin::GUIPin(OBSBlueprintInputPin *pin, QGraphicsItem *parent) : QGraphicsObject(parent),  parentNode(dynamic_cast<GUINode*>(parent)), inputPin(pin)
 {
-
 }
 
 GUIPin::GUIPin(OBSBlueprintOutputPin *pin, QGraphicsItem *parent) : QGraphicsObject(parent),  parentNode(dynamic_cast<GUINode*>(parent)), outputPin(pin)
@@ -42,6 +41,18 @@ OBSBlueprintPin * GUIPin::getBlueprintPin() const
 	return outputPin;
 }
 
+
+void GUIPin::connect(GUIConnector *connector)
+{
+	this->connector = connector;
+	update();
+}
+
+void GUIPin::disconnect()
+{
+	connector = nullptr;
+	update();
+}
 
 void GUIPin::drawPinContent(QPainter *painter, PinType pinType)
 {
