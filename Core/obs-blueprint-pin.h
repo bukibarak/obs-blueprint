@@ -1,7 +1,9 @@
 ﻿#pragma once
 #include <functional>
 #include <string>
+#include <algorithm>
 
+#include "pin-type.h"
 #include "Helpers/global-logger.h"
 
 class OBSBlueprintConnector;
@@ -9,40 +11,7 @@ class OBSBlueprintGraph;
 class OBSBlueprintNode;
 
 /**
- * All OBS Blueprint pin types that can be used with GUI graph.
- * Pins with type \c UNKNOWN_PIN will not be displayed.
- *
- * All PinType have a corresponding type. Please see ??? for more details.
- */
-enum PinType {
-	UNKNOWN_PIN,
-	AUDIOVIDEO_PIN,
-	AUDIO_PIN,
-	VIDEO_PIN,
-	BYTE_PIN,
-	INT_PIN,
-	FLOAT_PIN,
-	CHAR_PIN,
-	STRING_PIN,
-	COLOR_PIN,
-};
-
-constexpr const char* PinName[] = {
-	"UNKNOWN_PIN",
-	"AUDIOVIDEO_PIN",
-	"AUDIO_PIN",
-	"VIDEO_PIN",
-	"BYTE_PIN",
-	"INT_PIN",
-	"FLOAT_PIN",
-	"CHAR_PIN",
-	"STRING_PIN",
-	"COLOR_PIN"
-};
-
-
-/**
- * Base class for OBS Blueprint pins. This class should never be used directly, only child classes.
+ * Base class for \c OBSBlueprintPin. This class should never be used directly, only child classes \c OBSBlueprintInputPin and \c OBSBlueprintOutputPin.
  * @see OBSBlueprintInputPin
  * @see OBSBlueprintOutputPin
  */
@@ -53,7 +22,7 @@ public:
 	 * Get the pin type.
 	 * @return The pin type.
 	 */
-	PinType getPinType() const {return pinType;}
+	const PinType& getPinType() const {return pinType;}
 
 	/**
 	 * Get the node associated with this pin.
@@ -69,46 +38,37 @@ public:
 	 */
 	OBSBlueprintGraph* getParentGraph() const {return parentGraph;}
 
-	/**
-	 * Get the pin's connector.
-	 * @return The connector associated with this pin. Can be \c nullptr if the pin is not connected.
-	 * @see OBSBlueprintConnector.
-	 */
-	OBSBlueprintConnector* getConnector() const {return connector;}
-
-	/**
-	 * Check if a pin is associated with a connector.
-	 * @return \c true if there is a connector associated, \c false otherwise.
-	 * @see OBSBlueprintConnector.
-	 */
-	bool isConnected() const { return connector != nullptr; }
-
 
 	/**
 	 * Get the pointer of the value stored in this pin.\n
-	 * \b NOTE: You should NEVER delete the pointer by yourself, this will be done automatically when the pin is deleted.
+	 * \b NOTE: You should \b never delete the pointer by yourself, this will be done automatically when the pin is deleted.
 	 * @tparam T The pin data type (not as a pointer).
 	 * @return The pin value ptr in the given data type.
 	 */
 	template<class T> T* getValuePtr() { return static_cast<T*>(rawValuePtr); }
 
 	/**
-	 * Get a copy of the value stored in this pin.
+	 * Get a const reference of the value stored in this pin.
 	 * @tparam T The pin data type (not as a pointer).
 	 * @return A copy of the pin value in the given data type.
 	 */
-	template<class T> T getValue() { return *static_cast<T*>(rawValuePtr); }
+	template<class T>const T& getValue() { return *static_cast<T*>(rawValuePtr); }
 
 	/**
-	 * Set the pin ptr value to a copy of the given value.
+	 * Set the pin ptr value to a copy (?) of the given value.
 	 * @tparam T  The pin data type (not as a pointer).
 	 * @param value The new value that will be copied to the pin value ptr.
 	 */
 	template<class T> void setValue(const T& value) { *static_cast<T*>(rawValuePtr) = value; }
+	// {
+	// 	unsigned int valueSize = sizeof(T);
+	// 	if(valueSize != rawValueSize) GError("SIZE MISMATCH when trying to set value, unexpected behavior may happen! %u (given) != %u (stored)", sizeof(T), rawValueSize);
+	// 	memcpy(rawValuePtr, &value, std::min(valueSize, rawValueSize));
+	// }
 
 	/**
 	 * Get the pin display name string reference (const to prevent editing name)
-	 * @return The pin name.
+	 * @return The pin display name.
 	 */
 	const char* getDisplayName() const { return displayName.c_str(); }
 
@@ -145,14 +105,14 @@ private:
 
 	OBSBlueprintNode* parentNode = nullptr;
 	OBSBlueprintGraph* parentGraph = nullptr;
-	OBSBlueprintConnector* connector = nullptr;
 };
 
 /**
- * OBS Blueprint output pin class. Use static function \c OBSBlueprintOutputPin::CreateAndInitialize() to create a new pin.
+ * \c OBSBlueprintOutputPin class. Use static function \c OBSBlueprintOutputPin::CreateAndInitialize() to create a new pin.
  * @see OBSBlueprintOutputPin::CreateAndInitialize()
  */
 class OBSBlueprintOutputPin : public OBSBlueprintPin {
+	friend class OBSBlueprintConnector;
 public:
 
 	/**
@@ -176,17 +136,29 @@ public:
 		return pin;
 	}
 
+	/**
+	 * Get a list of all connectors linked to this pin.
+	 * @return A \c std::list const reference of all \c OBSBlueprintConnector*
+	 */
+	const std::list<OBSBlueprintConnector*>& getConnectors() const { return connectors; }
+
+	/** @return \c true if the pin have at least one connector, \c false otherwise. */
+	bool isConnected() const { return !connectors.empty(); }
+
 private:
+
+	std::list<OBSBlueprintConnector*> connectors;
 
 	// Private constructor, use static function instead
 	OBSBlueprintOutputPin(const PinType& type, OBSBlueprintNode* parent, const std::string& name) : OBSBlueprintPin(type, parent, name){}
 };
 
 /**
- * OBS Blueprint input pin class. Use static function \c OBSBlueprintInputPin::CreateAndInitialize() to create a new pin.
+ * \c OBSBlueprintInputPin class. Use static function \c OBSBlueprintInputPin::CreateAndInitialize() to create a new pin.
  * @see OBSBlueprintInputPin::CreateAndInitialize()
  */
 class OBSBlueprintInputPin : public OBSBlueprintPin {
+	friend class OBSBlueprintConnector;
 public:
 	/**
 	 * Create and initialize a new OBS Blueprint input pin.\n\n
@@ -228,12 +200,25 @@ public:
 	}
 
 	/**
-	 * Override this function to indicate if the pin should propagate the \a tick to the parent node connected to it.
+	 * Get the pin's connector.
+	 * @return The \c OBSBlueprintConnector* associated with this pin. Can be \c nullptr if the pin is not connected.
+	 * @see OBSBlueprintConnector
+	 */
+	OBSBlueprintConnector* getConnector() const {return connector;}
+
+	/** @return \c true if the pin is connected, \c false otherwise. */
+	bool isConnected() const { return connector != nullptr; }
+
+	/**
+	 * Override this function to indicate if the pin should propagate the \a tick to the parent node connected to it.\n
 	 * Not ticking unnecessary parent nodes can improve performance.
 	 */
 	std::function<bool()> shouldPropagateTick = [] { return true; };
 
 private:
+
+	OBSBlueprintConnector* connector = nullptr;
+
 	// Private constructor, use static function instead
 	OBSBlueprintInputPin(const PinType& type, OBSBlueprintNode* parent, const std::string& name) : OBSBlueprintPin(type, parent, name){}
 	// Private constructor, use static function instead

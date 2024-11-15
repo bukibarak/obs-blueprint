@@ -1,19 +1,20 @@
-﻿#include "gui-connector.h"
+﻿#include "obs-graphics-connector.h"
 
 #include <QPainter>
 
-#include "gui-pin.h"
+#include "obs-graphics-pin.h"
+#include "Helpers/pin-helper.h"
 
-GUIConnector::GUIConnector(OBSBlueprintConnector *connector, GUIPin *fromPin,
-                           GUIPin *toPin, QGraphicsItem *parent) : QGraphicsObject(parent), connector(connector), from(fromPin), to(toPin)
+OBSGraphicsConnector::OBSGraphicsConnector(OBSBlueprintConnector *connector, OBSGraphicsPin *fromPin,
+                                           OBSGraphicsPin *toPin, QGraphicsItem *parent) : QGraphicsObject(parent), connector(connector), from(fromPin), to(toPin)
 {
 	redrawConnector();
 
-	pen = QPen(GUIPin::GetPinColor(fromPin->getBlueprintPin()->getPinType()));
+	pen = QPen(PinColors::Get(fromPin));
 	pen.setWidth(10);
 }
 
-void GUIConnector::paint(QPainter *painter,
+void OBSGraphicsConnector::paint(QPainter *painter,
 	const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
 	qreal xMin = left->scenePos().x() + left->sceneBoundingRect().width()/2;
@@ -43,12 +44,12 @@ void GUIConnector::paint(QPainter *painter,
 	}
 }
 
-GUINode * GUIConnector::getOtherNode(GUINode *self) const
+OBSGraphicsNode * OBSGraphicsConnector::getOtherNode(OBSGraphicsNode *self) const
 {
 	return self == from->getParentNode() ? to->getParentNode() : self == to->getParentNode() ? from->getParentNode() : nullptr;
 }
 
-void GUIConnector::redrawConnector()
+void OBSGraphicsConnector::redrawConnector()
 {
 	prepareGeometryChange();
 	left = from->scenePos().x() + from->sceneBoundingRect().width()/2 < to->scenePos().x() + to->sceneBoundingRect().width()/2 ? from : to;

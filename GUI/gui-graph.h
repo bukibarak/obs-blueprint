@@ -1,7 +1,10 @@
 ﻿#pragma once
-#include "obs-graphics-scene.h"
-#include "obs-graphics-view.h"
-#include "Core/obs-blueprint-graph.h"
+
+
+class QWidget;
+class OBSGraphicsView;
+class OBSGraphicsScene;
+class OBSBlueprintGraph;
 
 class GUIGraph {
 public:
@@ -16,6 +19,7 @@ public:
 
 private:
 
+	QWidget* window;
 	OBSGraphicsScene* scene;
 	OBSGraphicsView* view;
 	OBSBlueprintGraph* graph;

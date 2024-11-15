@@ -5,14 +5,8 @@
 
 OBSGraphicsView::OBSGraphicsView(QWidget *parent) : QGraphicsView(parent)
 {
-	setWindowFlags(Qt::Window | Qt::CustomizeWindowHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
-	setMinimumWidth(300);
-	setMinimumHeight(300);
-
 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-	// setTransformationAnchor(ViewportAnchor::NoAnchor);
 	setDragMode(QGraphicsView::NoDrag);
 }
 

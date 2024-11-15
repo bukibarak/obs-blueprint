@@ -1,6 +1,7 @@
 ﻿#include "obs-blueprint-node.h"
 
 #include "obs-blueprint-connector.h"
+#include "obs-blueprint-graph.h"
 #include "Helpers/global-logger.h"
 
 OBSBlueprintNode::OBSBlueprintNode(std::string name): displayName(std::move(name))
@@ -10,7 +11,7 @@ OBSBlueprintNode::OBSBlueprintNode(std::string name): displayName(std::move(name
 
 OBSBlueprintNode::~OBSBlueprintNode()
 {
-	GInfo("==== Begin node '%s' destroy ====", getDisplayName());
+	GInfo("-------- Destroy Node [%s] --------", getDisplayName());
 	for(auto inputPin : inputPins) {
 		delete inputPin;
 	}
@@ -18,23 +19,21 @@ OBSBlueprintNode::~OBSBlueprintNode()
 		delete outputPin;
 	}
 
-	if(graphBeginTickDelegate != nullptr) *graphBeginTickDelegate -= graphBeginTick;
-	else GWarn("Node '%s' was not linked to graph begin tick delegate, should have been done by graph on node creation!", getDisplayName());
-	if(graphEndTickDelegate != nullptr) *graphEndTickDelegate -= graphEndTick;
-	else GWarn("Node '%s' was not linked to graph end tick delegate, should have been done by graph on node creation!", getDisplayName());
-	GInfo("====== Node '%s' destroyed ======", getDisplayName());
-	MyLogger::Info("====== Node '%s' destroyed ======", getDisplayName());
+	if(graph != nullptr) {
+		graph->onGraphBeginTick -= graphBeginTick;
+		graph->onGraphEndTick -= graphEndTick;
+	}
+	else {
+		GWarn("Node [%s] was not linked to graph, should have been done by graph on node creation!", getDisplayName());
+	}
 }
 
-void OBSBlueprintNode::setupGraphDelegates(
-	multicastDelegate_OneParam<float> &beginTickDelegate,
-	multicastDelegate_ZeroParam &endTickDelegate)
+void OBSBlueprintNode::setupGraph(OBSBlueprintGraph* graph)
 {
-	graphBeginTickDelegate = &beginTickDelegate;
-	graphEndTickDelegate = &endTickDelegate;
-
-	*graphBeginTickDelegate += graphBeginTick;
-	*graphEndTickDelegate += graphEndTick;
+	this->graph = graph;
+	graph->onGraphBeginTick += graphBeginTick;
+	graph->onGraphEndTick += graphEndTick;
+	onGraphLinked();
 }
 
 void OBSBlueprintNode::tick(float deltaSeconds)
@@ -47,7 +46,7 @@ void OBSBlueprintNode::tick(float deltaSeconds)
 		for(OBSBlueprintInputPin* inputPin : inputPins) {
 			if(inputPin->isConnected() && inputPin->shouldPropagateTick()) {
 				if(inputPin->getConnector()->getFromPin() == nullptr || inputPin->getConnector()->getFromPin()->getParentNode() == nullptr) {
-					GError("Input pin '%s' on node '%s' is connected, but no corresponding pin/node was found! Will not propagate tick on this pin...", inputPin->getDisplayName(), getDisplayName());
+					GError("Input pin '%s' on node [%s] is connected, but no corresponding pin/node was found! Will not propagate tick on this pin...", inputPin->getDisplayName(), getDisplayName());
 					continue;
 				}
 				// Add the parent node to the list
@@ -85,7 +84,7 @@ std::vector<OBSBlueprintConnector*> OBSBlueprintNode::getAllConnectors() const
 	}
 	for(OBSBlueprintOutputPin* pin : outputPins) {
 		if(pin->isConnected()) {
-			result.push_back(pin->getConnector());
+			result.insert(result.end(), pin->getConnectors().begin(), pin->getConnectors().end());
 		}
 	}
 	return result;
@@ -94,11 +93,11 @@ std::vector<OBSBlueprintConnector*> OBSBlueprintNode::getAllConnectors() const
 void OBSBlueprintNode::addInputPin(OBSBlueprintInputPin *inputPin)
 {
 	inputPins.push_back(inputPin);
-	GInfo("Input pin '%s' added to node '%s'", inputPin->getDisplayName(), getDisplayName());
+	GInfo("[%s] Input %s '%s' added to node", getDisplayName(), PinName[inputPin->getPinType()], inputPin->getDisplayName());
 }
 
 void OBSBlueprintNode::addOutputPin(OBSBlueprintOutputPin *outputPin)
 {
 	outputPins.push_back(outputPin);
-	GInfo("Output pin '%s' added to node '%s'", outputPin->getDisplayName(), displayName.c_str());
+	GInfo("[%s] Output %s '%s' added to node", getDisplayName(), PinName[outputPin->getPinType()], outputPin->getDisplayName());
 }

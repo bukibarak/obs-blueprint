@@ -12,10 +12,9 @@ public:
 
 	void execute(float deltaSeconds) override;
 
-	OBSBlueprintInputPin* getWidthPin() const {return pinWidth; }
-	OBSBlueprintInputPin* getHeightPin() const {return pinHeight; }
-	OBSBlueprintInputPin* getColorPin() const {return pinColor; }
-	OBSBlueprintOutputPin* getVideoPin() const { return pinVideo; }
+	static OBSBlueprintNode* CreateDefault() { return new NodeColorSource(200, 100, 0xFF0000FF); }
+	static std::vector<PinType> InputPins() { return {INT_PIN, INT_PIN, COLOR_PIN}; }
+	static std::vector<PinType> OutputPins() { return {VIDEO_PIN}; }
 
 private:
 	OBSBlueprintInputPin* pinWidth;

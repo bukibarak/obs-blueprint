@@ -2,11 +2,14 @@
 
 #include "obs-blueprint-node.h"
 #include "obs-blueprint-connector.h"
+#include "obs-blueprint-variable.h"
 #include "GUI/gui-graph.h"
-#include "Nodes/node-color-source.h"
-#include "Nodes/FloatHelpers/node-float-to-int.h"
-#include "Nodes/node-sinus-time.h"
-#include "Nodes/FloatHelpers/node-float-abs.h"
+#include "Nodes/Video/node-color-source.h"
+#include "Nodes/Numbers/Float/node-float-to-int.h"
+#include "Nodes/Waves/node-sinus-time.h"
+#include "Nodes/node-temp-test.h"
+#include "Nodes/Numbers/Float/node-float-abs.h"
+#include "Nodes/Video/node-image-souce.h"
 #include "Structs/video-frame.h"
 
 extern "C" {
@@ -16,27 +19,38 @@ extern "C" {
 		GDebug("======== Begin graph creation ========");
 		mainVideoInput = OBSBlueprintInputPin::CreateAndInitialize(VIDEO_PIN, this, video_frame(), "Main Video");
 
-		NodeColorSource* colorSourceNode = new NodeColorSource(300, 100,0xFFAA3FBB);
-		addNode(colorSourceNode);
-		createConnector(colorSourceNode->getVideoPin(), mainVideoInput);
-
-		NodeFloatToInt* floatToIntNode = new NodeFloatToInt();
-		addNode(floatToIntNode);
-		createConnector(floatToIntNode->getOutputPin(), colorSourceNode->getWidthPin());
+		NodeSinusTime* sinusTimeNode = new NodeSinusTime(2.0f, 800.0f);
+		addNode(sinusTimeNode);
 
 		NodeFloatAbs* absNode = new NodeFloatAbs();
 		addNode(absNode);
-		createConnector(absNode->getOutputPin(), floatToIntNode->getInputPin());
 
-		NodeSinusTime* sinusTimeNode = new NodeSinusTime(5.0f, 800.0f);
-		addNode(sinusTimeNode);
-		createConnector(sinusTimeNode->getResultPin(), absNode->getInputPin());
+		NodeFloatToInt* floatToIntNode = new NodeFloatToInt();
+		addNode(floatToIntNode);
+
+		NodeColorSource* colorSourceNode = new NodeColorSource(1920, 1080,0x800000FF);
+		addNode(colorSourceNode);
+
+		NodeImageSource* imageSourceNode = new NodeImageSource("C:/temp/p.gif");
+		addNode(imageSourceNode);
+
+		createConnector(imageSourceNode->getOutputPins()[0], mainVideoInput);
+
+		OBSBlueprintVariable* v1 = OBSBlueprintVariable::CreateVariable<float>(FLOAT_PIN, "My float variable");
+		addVariable(v1);
+
+		OBSBlueprintVariable* v2 = OBSBlueprintVariable::CreateVariable<bool>(BOOLEAN_PIN, "My bool variable");
+		addVariable(v2);
+
+		OBSBlueprintVariable* v3 = OBSBlueprintVariable::CreateVariable<video_frame>(VIDEO_PIN, "My video variable");
+		addVariable(v3);
+
 		GDebug("=========== Graph created! ===========\n\n");
 	}
 
 	OBSBlueprintGraph::~OBSBlueprintGraph()
 	{
-		blog(LOG_INFO, "\n");
+		blog(LOG_DEBUG, "\n");
 		GDebug("============== Begin graph destroy ==============\n");
 		delete guiGraph;
 
@@ -44,13 +58,18 @@ extern "C" {
 		for(auto connector : graphConnectors) {
 			delete connector;
 		}
-		GInfo("Connectors destroyed!\n");
+		GInfo(" ----> Connectors destroyed!!\n");
 
 		GInfo("Deleting [%zu] nodes...", graphNodes.size());
 		for(auto node : graphNodes) {
 			delete node;
 		}
-		GInfo("Nodes destroyed!\n");
+		GInfo(" ----> Nodes destroyed!!\n");
+
+		GInfo("Deleting [%zu] variables...", graphVariables.size());
+		for(auto var : graphVariables) {
+			delete var;
+		}
 
 		delete mainVideoInput;
 		blog(LOG_DEBUG, "\n");
@@ -68,6 +87,9 @@ extern "C" {
 
 	void OBSBlueprintGraph::tick(float deltaSeconds)
 	{
+		graphTime += deltaSeconds;
+
+		mutex().lock();
 		onGraphBeginTick.execute(deltaSeconds);
 
 		// If the main video input pin is connected, use it to call tick() on parent node
@@ -84,6 +106,7 @@ extern "C" {
 		}
 
 		onGraphEndTick.execute();
+		mutex().unlock();
 		// GInfo("Graph main video is %ux%u", mainVideoInput->getValuePtr<video_frame>()->width, mainVideoInput->getValuePtr<video_frame>()->height);
 	}
 
@@ -106,8 +129,24 @@ extern "C" {
 	}
 }
 
+void OBSBlueprintGraph::addVariable(OBSBlueprintVariable *variable)
+{
+	mutex().lock();
+	variable->setupGraph(this);
+	graphVariables.push_back(variable);
+	mutex().unlock();
+}
+
+void OBSBlueprintGraph::deleteVariable(OBSBlueprintVariable *variable)
+{
+	mutex().lock();
+	graphVariables.remove(variable);
+	delete variable;
+	mutex().unlock();
+}
+
 OBSBlueprintConnector* OBSBlueprintGraph::createConnector(OBSBlueprintOutputPin *from,
-                                        OBSBlueprintInputPin *to)
+                                                          OBSBlueprintInputPin *to)
 {
 	if(from == nullptr) {
 		GError("Cannot create connector, from pin is nullptr... Abort!");
@@ -118,19 +157,19 @@ OBSBlueprintConnector* OBSBlueprintGraph::createConnector(OBSBlueprintOutputPin 
 		return nullptr;
 	}
 
-	const char* fromParentName = from->getParentNode() ? from->getParentNode()->getDisplayName() : "NO_PARENT";
-	const char* toParentName = to->getParentNode() ? to->getParentNode()->getDisplayName() : to->getParentGraph() ? "Graph" : "NO_PARENT";
+#if DEBUG
+	const char* fromParentName = from->getParentNode() ? from->getParentNode()->getDisplayName() : "NO PARENT NODE";
+	const char* toParentName = to->getParentNode() ? to->getParentNode()->getDisplayName() : to->getParentGraph() ? "Main Graph" : "NO PARENT NODE";
+#endif
 
 	if(from->getPinType() != to->getPinType()) {
-		GError("Output pin '%s' (%s) of type %s does not match input pin '%s' (%s) type %s... Abort!",
+#if DEBUG
+		GError("Output pin '%s [%s]' of type %s does not match input pin '%s [%s]' type %s... Abort!",
 			from->getDisplayName(), fromParentName, PinName[from->getPinType()],
 			to->getDisplayName(), toParentName, PinName[to->getPinType()]
 		);
-	}
-
-	if(from->getConnector() != nullptr) {
-		GWarn("Output pin '%s' is already connected! Deleting previous connector first... (will not be updated by GUI)", from->getDisplayName());
-		deleteConnector(from->getConnector());
+#endif
+		return nullptr;
 	}
 
 	if(to->getConnector() != nullptr) {
@@ -138,9 +177,14 @@ OBSBlueprintConnector* OBSBlueprintGraph::createConnector(OBSBlueprintOutputPin 
 		deleteConnector(to->getConnector());
 	}
 
+	mutex().lock();
 	OBSBlueprintConnector* newConnector = new OBSBlueprintConnector(from, to);
 	graphConnectors.push_back(newConnector);
-	GInfo("Added connector from pin '%s' (%s) to pin '%s' (%s)", from->getDisplayName(), fromParentName, to->getDisplayName(), toParentName);
+	mutex().unlock();
+#if DEBUG
+	GInfo("CONNECT [%s] '%s' =======> '%s' [%s]", fromParentName, from->getDisplayName(), to->getDisplayName(), toParentName);
+#endif
+
 	return newConnector;
 }
 
@@ -148,25 +192,32 @@ void OBSBlueprintGraph::deleteConnector(OBSBlueprintConnector *connector)
 {
 	if(connector == nullptr) {
 		GError("Cannot delete nullptr connector... Abort!");
+		return;
 	}
 
 	if(connector->getToPin() == mainVideoInput) mainVideoInput->setValue(video_frame());
 
+	mutex().lock();
 	graphConnectors.remove(connector);
 	delete connector;
+	mutex().unlock();
 }
 
 void OBSBlueprintGraph::addNode(OBSBlueprintNode *node)
 {
-	node->setupGraphDelegates(onGraphBeginTick, onGraphEndTick);
+	mutex().lock();
+	node->setupGraph(this);
 	graphNodes.push_back(node);
+	mutex().unlock();
 }
 
 void OBSBlueprintGraph::deleteNode(OBSBlueprintNode *node)
 {
+	mutex().lock();
 	graphNodes.remove(node);
 	for(OBSBlueprintConnector* connector : node->getAllConnectors()) {
 		deleteConnector(connector);
 	}
 	delete node;
+	mutex().unlock();
 }

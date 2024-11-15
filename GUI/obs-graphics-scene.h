@@ -4,10 +4,11 @@
 
 #include "Core/obs-blueprint-node.h"
 
+class OBSGraphicsPinInputField;
 class OBSGraphicsView;
-class GUIPin;
-class GUINode;
-class GUIConnector;
+class OBSGraphicsPin;
+class OBSGraphicsNode;
+class OBSGraphicsConnector;
 
 class OBSGraphicsScene : public QGraphicsScene {
 public:
@@ -15,45 +16,50 @@ public:
 
 	void initializeFromBlueprintGraph();
 	void setView(OBSGraphicsView* mainView);
-	void addGUINode(OBSBlueprintNode* node, qreal px, qreal py);
-	void removeGUINode(GUINode* node);
-	void addGUIConnector(OBSBlueprintConnector* connector, GUIPin* from, GUIPin* to);
-	void removeGUIConnector(GUIConnector* connector);
-	GUINode* getGUINodeAt(const QPointF& scenePos) const;
-	GUIConnector* getGUIConnectorAt(const QPointF& scenePos) const;
+	OBSGraphicsNode* addGUINode(OBSBlueprintNode* node, qreal px, qreal py);
+	void removeGUINode(OBSGraphicsNode* node);
+	OBSGraphicsConnector* addGUIConnector(OBSBlueprintConnector* connector, OBSGraphicsPin* from, OBSGraphicsPin* to);
+	void removeGUIConnector(OBSGraphicsConnector* connector);
+
 	void resetZoomLevel() { zoomLevel = 0; }
 
 protected:
 	void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 	void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
-	void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
 	void mouseClickEvent(QGraphicsSceneMouseEvent *event);
+	void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
 	void wheelEvent(QGraphicsSceneWheelEvent *event) override;
 
-	GUIPin* getGUIPinAt(const QPointF& scenePos) const;
+	OBSGraphicsPinInputField* getGraphicsInputFieldAt(const QPointF& scenePos) const;
+	OBSGraphicsConnector* getGraphicsConnectorAt(const QPointF& scenePos) const;
+	OBSGraphicsNode* getGraphicsNodeAt(const QPointF& scenePos) const;
+	OBSGraphicsPin* getGraphicsPinAt(const QPointF& scenePos) const;
 
 private:
 
+	bool tryConnectPins(OBSGraphicsPin* A, OBSGraphicsPin* B);
+	OBSGraphicsNode *showContextMenu(const QPointF &scenePos);
 	void forceGraphGUIOnBottom();
 
 	OBSGraphicsView* view = nullptr;
 
 	OBSBlueprintGraph* graph = nullptr;
-	GUIPin* graphVideoInputPin = nullptr;
+	OBSGraphicsPin* graphVideoInputPin = nullptr;
 
 	int32_t zoomLevel = 0;
 
 	Qt::MouseButton pressedButton;
-	GUIPin* pressedPin = nullptr;
-	GUINode* pressedNode = nullptr;
+	OBSGraphicsPin* pressedPin = nullptr;
+	OBSGraphicsNode* pressedNode = nullptr;
+	OBSGraphicsPinInputField* pressedInputField = nullptr;
 	QPointF pressedPosRelative;
 	bool mouseClicked = false;
 	bool mouseMoved = false;
 	QGraphicsLineItem* dragConnector = nullptr;
 
-	std::map<OBSBlueprintNode*, GUINode*> nodeMap;
-	std::map<OBSBlueprintPin*, GUIPin*> pinMap;
-	std::map<OBSBlueprintConnector*, GUIConnector*> connectorMap;
+	QHash<OBSBlueprintNode*, OBSGraphicsNode*> nodeMap;
+	QHash<OBSBlueprintPin*, OBSGraphicsPin*> pinMap;
+	QHash<OBSBlueprintConnector*, OBSGraphicsConnector*> connectorMap;
 
-	std::function<void(QResizeEvent*)> resizeFunc = [this] (QResizeEvent* event) {forceGraphGUIOnBottom();};
+	std::function<void(QResizeEvent*)> resizeFunc = [this] (QResizeEvent*) {forceGraphGUIOnBottom();};
 };

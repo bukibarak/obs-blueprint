@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.28...3.30)
 
 project(obs-blueprint)
 
@@ -11,9 +12,8 @@ file(GLOB_RECURSE obs-blueprint_SRC
 )
 
 set(obs-blueprint_SOURCES ${obs-blueprint_SRC})
+add_library(obs-blueprint MODULE ${obs-blueprint_SOURCES})
 
-add_library(obs-blueprint MODULE
-      ${obs-blueprint_SOURCES})
 target_link_libraries(
       obs-blueprint
       PRIVATE OBS::libobs

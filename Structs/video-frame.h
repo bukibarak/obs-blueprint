@@ -13,7 +13,7 @@ struct video_frame {
 	/**
 	 * Create a new video frame with no data.
 	 */
-	video_frame() : width(0), height(0), pixels(nullptr){}
+	video_frame() : width(0), height(0), pixels(nullptr) {}
 
 	/**
 	 * Create a new video frame with given data.
@@ -22,6 +22,7 @@ struct video_frame {
 	 * @param data The frame pixel data array ptr. The array size must be \c width*height
 	 */
 	video_frame(const uint32_t& px, const uint32_t& py, pixel* data) : width(px), height(py), pixels(data) {}
+
 
 	/** The frame width. */
 	uint32_t width;
