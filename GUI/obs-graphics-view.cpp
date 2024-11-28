@@ -1,13 +1,25 @@
 ﻿#include "obs-graphics-view.h"
 
 #include <qevent.h>
+#include <QMenu>
 #include <QScrollBar>
 
-OBSGraphicsView::OBSGraphicsView(QWidget *parent) : QGraphicsView(parent)
+#include "gui-graph.h"
+#include "obs-graphics-scene.h"
+#include "Core/obs-blueprint-graph.h"
+#include "Core/obs-blueprint-variable.h"
+#include "Nodes/Variables/node-variable-get.h"
+#include "Variables/gui-variables-widget.h"
+#include "Variables/obs-graphics-variables-list.h"
+
+OBSGraphicsView::OBSGraphicsView(GUIContext& context, QWidget *parent) : QGraphicsView(parent), ctx(context)
 {
+	ctx.view = this;
+
 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	setDragMode(QGraphicsView::NoDrag);
+	setAcceptDrops(true);
 }
 
 QRectF OBSGraphicsView::getSceneViewport() const
@@ -57,7 +69,6 @@ void OBSGraphicsView::scrollContentsBy(int dx, int dy)
 void OBSGraphicsView::resizeEvent(QResizeEvent *event)
 {
 	QGraphicsView::resizeEvent(event);
-	qDebug() << "onResizeEvent called";
 	onResizeEvent.execute(event);
 }
 
@@ -68,4 +79,66 @@ void OBSGraphicsView::wheelEvent(QWheelEvent *event)
 	QGraphicsView::wheelEvent(event);
 	horizontalScrollBar()->setValue(valueH);
 	verticalScrollBar()->setValue(valueV); // FIX position bug when zooming
+}
+
+void OBSGraphicsView::dragEnterEvent(QDragEnterEvent *event)
+{
+	if(event->source() == ctx.varsList)
+		event->accept();
+	else
+		QGraphicsView::dragEnterEvent(event);
+}
+
+void OBSGraphicsView::dragMoveEvent(QDragMoveEvent *event)
+{
+	if(event->source() == ctx.varsList && ctx.scene->isDropAccepted(mapToScene(event->position().toPoint())))
+			event->accept();
+	else
+		QGraphicsView::dragMoveEvent(event);
+}
+
+void OBSGraphicsView::dropEvent(QDropEvent *event)
+{
+	if(event->source() == ctx.varsList && ctx.scene->isDropAccepted(mapToScene(event->position().toPoint()))) {
+		event->accept();
+		OBSBlueprintVariable* variable = ctx.varsWidget->itemToVariable(ctx.varsList->selectedItem());
+		OBSBlueprintNode* node = nullptr;
+
+		Qt::KeyboardModifiers keys = QGuiApplication::queryKeyboardModifiers();
+		bool ctrl = keys.testFlag(Qt::KeyboardModifier::ControlModifier);
+		bool alt = keys.testFlag(Qt::KeyboardModifier::AltModifier);
+		if(ctrl && !alt) {
+			// Drop with ctrl pressed --> GET node
+			node = new NodeVariableGet(variable);
+		}
+		else if(!ctrl && alt) {
+			// Drop with alt pressed --> SET node
+			// TODO SET NODE
+		}
+		else {
+			// None or both pressed --> show context menu
+			QMenu menu;
+			QAction* get = menu.addAction("Get '" + QString(variable->getDisplayName()) + "'");
+			QAction* set = menu.addAction("Set '" + QString(variable->getDisplayName()) + "'");
+			QAction* action = menu.exec(mapToGlobal(event->position()).toPoint());
+			if(action == get)
+				node = new NodeVariableGet(variable);
+			else if(action == set)
+				action = nullptr;// TODO NODE SET
+		}
+
+		if(node != nullptr) {
+			ctx.graph->addNode(node);
+			QPointF pos = mapToScene(event->position().toPoint());
+			ctx.scene->addGUINode(node, pos.x(), pos.y());
+		}
+	}
+	else
+		QGraphicsView::dropEvent(event);
+}
+
+void OBSGraphicsView::focusInEvent(QFocusEvent *event)
+{
+	QGraphicsView::focusInEvent(event);
+	ctx.varsList->resetSelected();
 }

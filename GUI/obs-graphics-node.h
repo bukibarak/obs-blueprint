@@ -27,9 +27,16 @@ public:
 
 	QList<OBSGraphicsConnector*> GUIOnly_getConnectors() const;
 
+	void setSelectionState(bool state);
+
 private:
 
+	bool selected = false;
+	const qreal selectPenWidth = 10;
+
 	void calculateContentRect();
+	QSizeF calculateBoundingRect() const;
+	void alignPins();
 	static qreal calculatePinsLength(size_t size);
 
 	OBSBlueprintNode* node;
@@ -42,6 +49,11 @@ private:
 
 	QFont nodeNameFont;
 	QFont pinNameFont;
+	QString name;
+	QPointF alignLeft{};
+	QPointF alignRight{};
+	QPointF alignTop{};
+	QPointF alignBottom{};
 
 	//QRect nodeNameTextRect{GUI_PIN_SIZE + 10, GUI_PIN_SIZE + 10, GUI_NODE_WIDTH - 20, 130};
 	QRectF nodeContentRect{0,0,0,0};

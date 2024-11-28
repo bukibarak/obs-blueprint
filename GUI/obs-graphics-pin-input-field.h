@@ -3,7 +3,10 @@
 #include <QIntValidator>
 #include <QLineEdit>
 
+#include "Helpers/pin-helper.h"
 
+
+class OBSGraphicsTypeField;
 class OBSGraphicsPin;
 
 class OBSGraphicsPinInputField : public QGraphicsProxyWidget {
@@ -15,13 +18,9 @@ public:
 
 private:
 	OBSGraphicsPin* pin;
-	QLineEdit lineEdit;
-	QIntValidator byteValidator{0, 255, &lineEdit};
-	QIntValidator intValidator{&lineEdit};
-	QDoubleValidator floatValidator{&lineEdit};
-	QRegularExpressionValidator colorValidator{QRegularExpression("^(0x|0X)?[a-fA-F0-9]{8}$"), &lineEdit};
+	OBSGraphicsTypeField* typeField;
 
 	std::function<void(bool)> pinConnectionStateChangedCallback;
 
-	void lineEditChangedCallback();
+	std::function<void(QString)> valueChangedCallback = [this](const QString& value) {TypeConverter::FromString(pin->getBlueprintPin(), value.toStdString());};
 };

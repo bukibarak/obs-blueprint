@@ -5,25 +5,32 @@
 #include <QWindow>
 #include <QSplitter>
 
-#include "gui-variables-widget.h"
 #include "obs-frontend-api.h"
 #include "obs-graphics-scene.h"
 #include "obs-graphics-view.h"
+#include "Details/gui-details-widget.h"
+#include "Variables/gui-variables-widget.h"
 
 
 GUIGraph::GUIGraph(OBSBlueprintGraph *attachedGraph) : graph(attachedGraph)
 {
+	ctx.graph = graph;
+	ctx.GUIgraph = this;
 	window = new QWidget(static_cast<QWidget *>(obs_frontend_get_main_window()), Qt::Window | Qt::CustomizeWindowHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
-	view = new OBSGraphicsView();
-	scene = new OBSGraphicsScene(graph);
-	scene->setView(view);
+	view = new OBSGraphicsView(ctx, window);
+	scene = new OBSGraphicsScene(ctx);
 	view->setScene(scene);
 
-	QWidget* leftPart = new GUIVariablesWidget(graph, window);
+	varWidget = new GUIVariablesWidget(ctx, window);
+	detailsWidget = new GUIDetailsWidget(ctx, window);
+
 
 	QSplitter* splitter = new QSplitter();
-	splitter->addWidget(leftPart);
+	splitter->addWidget(varWidget);
 	splitter->addWidget(view);
+	splitter->addWidget(detailsWidget);
+	varWidget->resize(500, varWidget->height());
+	detailsWidget->resize(700, detailsWidget->height());
 
 	QHBoxLayout *layout = new QHBoxLayout(window);
 	layout->setSpacing(0);
@@ -36,7 +43,8 @@ GUIGraph::GUIGraph(OBSBlueprintGraph *attachedGraph) : graph(attachedGraph)
 
 GUIGraph::~GUIGraph()
 {
-	view->deleteLater();
+	ctx.onDeletion.execute();
+	window->deleteLater(); // WARNING: This might delete all Qt Objects AFTER the graph is deleted. This means, all pointers to OBSBlueprint objects might be invalid!
 }
 
 

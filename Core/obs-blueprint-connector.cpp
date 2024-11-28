@@ -15,6 +15,8 @@ OBSBlueprintConnector::OBSBlueprintConnector(OBSBlueprintOutputPin *from,
 
 	fromPin->connectors.push_back(this);
 	toPin->connector = this;
+	fromPin->onConnectionChanged.execute();
+	toPin->onConnectionChanged.execute();
 	// GInfo("CONNECT '%s' ------> '%s'", from->getDisplayName(), to->getDisplayName());
 }
 
@@ -22,6 +24,8 @@ OBSBlueprintConnector::~OBSBlueprintConnector()
 {
 	fromPin->connectors.remove(this);
 	toPin->connector = nullptr;
+	fromPin->onConnectionChanged.execute();
+	toPin->onConnectionChanged.execute();
 #if DEBUG
 	OBSBlueprintOutputPin* from = getFromPin();
 	OBSBlueprintInputPin* to = getToPin();
@@ -40,5 +44,9 @@ void OBSBlueprintConnector::propagateData() const
 		GError("SIZE MISMATCH when trying to propagate data, unexpected behavior may happen! (%u != %u)", size, otherSize);
 		size = std::min(size, otherSize);
 	}
-	memcpy(toPin->rawValuePtr, fromPin->rawValuePtr, size);
+	if(fromPin->getPinType() == STRING_PIN) {
+		toPin->setValue(fromPin->getValue<std::string>()); // TODO cannot memcpy std::string!!! --> use const char* instead??
+	} else {
+		memcpy(toPin->rawValuePtr, fromPin->rawValuePtr, size);
+	}
 }

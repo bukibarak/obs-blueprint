@@ -1,71 +1,157 @@
 ﻿#include "pin-helper.h"
 
 #include <iomanip>
+#include <QPainter>
 #include <sstream>
 
-#include "Core/obs-blueprint-pin.h"
-#include "GUI/obs-graphics-pin.h"
+#include "Structs/video-frame.h"
 
-std::string PinConverter::AsString(OBSBlueprintPin *pin)
+std::string TypeConverter::AsString(OBSBlueprintPin *pin)
 {
-	PinType type = pin->getPinType();
-
-	if(type == BYTE_PIN)	return std::to_string(pin->getValue<uint8_t>());
-	if(type == INT_PIN)		return std::to_string(pin->getValue<int32_t>());
-	if(type == CHAR_PIN)	return {1, pin->getValue<char>()};
-	if(type == STRING_PIN)	return pin->getValue<std::string>();
-	if(type == FLOAT_PIN) {
-		std::ostringstream oss;
-		oss << std::setprecision(8) << std::noshowpoint << pin->getValue<float>();
-		return oss.str();
-	}
-	if(type == COLOR_PIN) {
-		std::stringstream ss;
+	std::stringstream ss;
+	switch (pin->getPinType()) {
+	case EXECUTION_PIN:
+		return "EXECUTE";
+	case BOOLEAN_PIN:
+		return std::to_string(pin->getValue<bool>());
+	case BYTE_PIN:
+		return std::to_string(pin->getValue<uint8_t>());
+	case INT_PIN:
+		return std::to_string(pin->getValue<int32_t>());
+	case FLOAT_PIN:
+		ss << std::setprecision(8) << std::noshowpoint << pin->getValue<float>();
+		return ss.str();
+	case CHAR_PIN:
+		return {1, pin->getValue<char>()};
+	case STRING_PIN:
+		return pin->getValue<std::string>();
+	case COLOR_PIN:
 		ss << std::hex << std::uppercase << pin->getValue<uint32_t>();
 		return ss.str();
+	default:
+		return "";
 	}
-
-	return "";
 }
 
-void PinConverter::FromString(OBSBlueprintPin *pin,
+std::string TypeConverter::AsString(OBSBlueprintVariable *variable)
+{
+	std::stringstream ss;
+	switch (variable->getPinType()) {
+	case VIDEO_PIN:
+		ss << variable->getValue<video_frame>().width << "x" << variable->getValue<video_frame>().height;
+		return ss.str();
+	case BOOLEAN_PIN:
+		return std::to_string(variable->getValue<bool>());
+	case BYTE_PIN:
+		return std::to_string(variable->getValue<uint8_t>());
+	case INT_PIN:
+		return std::to_string(variable->getValue<int32_t>());
+	case FLOAT_PIN:
+		ss << std::setprecision(8) << std::noshowpoint << variable->getValue<float>();
+		return ss.str();
+	case CHAR_PIN:
+		return {1, variable->getValue<char>()};
+	case STRING_PIN:
+		return variable->getValue<std::string>();
+	case COLOR_PIN:
+		ss << std::hex << std::uppercase << variable->getValue<uint32_t>();
+		return ss.str();
+	default:
+		return "";
+	}
+}
+
+void TypeConverter::FromString(OBSBlueprintPin *pin,
+                               const std::string &strValue)
+{
+	switch (const PinType& type = pin->getPinType()) {
+	case EXECUTION_PIN:
+		if(strValue == "EXECUTE" && pin->getValuePtr<std::function<void()>>()) {
+			pin->getValue<std::function<void()>>().operator()();
+		}
+		break;
+	case BOOLEAN_PIN:
+		pin->setValue<bool>(strValue != "0");
+		break;
+	case BYTE_PIN:
+		pin->setValue<uint8_t>(std::stoi(strValue));
+		break;
+	case INT_PIN:
+		pin->setValue<int32_t>(std::stoi(strValue));
+		break;
+	case FLOAT_PIN:
+		pin->setValue<float>(std::stof(strValue));
+		break;
+	case CHAR_PIN:
+		pin->setValue<char>(strValue[0]);
+		break;
+	case STRING_PIN:
+		pin->setValue<std::string>(strValue);
+		break;
+	case COLOR_PIN:
+		pin->setValue<uint32_t>(std::stoul(strValue, nullptr, 16));
+		break;
+	default:
+		GError("Unable to set pin value '%s' from string, undefined type %s", pin->getDisplayName(), PinName[type]);
+	}
+}
+
+void TypeConverter::FromString(OBSBlueprintVariable *variable,
 	const std::string &strValue)
 {
-	PinType type = pin->getPinType();
-
-	if(type == BYTE_PIN) {
-		pin->setValue<uint8_t>(std::stoi(strValue));
-	}
-	else if(type == INT_PIN) {
-		pin->setValue(std::stoi(strValue));
-	}
-	else if(type == CHAR_PIN) {
-		pin->setValue(strValue[0]);
-	}
-	else if(type == STRING_PIN) {
-		pin->setValue(strValue);
-	}
-	else if(type == FLOAT_PIN) {
-		pin->setValue(std::stof(strValue));
-	}
-	else if(type == COLOR_PIN) {
-		pin->setValue(std::stoul(strValue, nullptr, 16));
+	switch (const PinType& type = variable->getPinType()) {
+	case BOOLEAN_PIN:
+		variable->setValue<bool>(strValue != "0");
+		break;
+	case BYTE_PIN:
+		variable->setValue<uint8_t>(std::stoi(strValue));
+		break;
+	case INT_PIN:
+		variable->setValue<int32_t>(std::stoi(strValue));
+		break;
+	case FLOAT_PIN:
+		variable->setValue<float>(std::stof(strValue));
+		break;
+	case CHAR_PIN:
+		variable->setValue<char>(strValue[0]);
+		break;
+	case STRING_PIN:
+		variable->setValue<std::string>(strValue);
+		break;
+	case COLOR_PIN:
+		variable->setValue<uint32_t>(std::stoul(strValue, nullptr, 16));
+		break;
+	default:
+		GError("Unable to set variable value '%s' from string, undefined type %s", variable->getDisplayName(), PinName[type]);
 	}
 }
 
-
-const QColor & PinColors::Get(const OBSGraphicsPin *pin)
+const QPixmap & PinColors::ConnectedIcon()
 {
-	return Get(pin->getBlueprintPin());
+	if(ConnectedPixmap.isNull()) {
+		ConnectedPixmap = QPixmap(10,10);
+		ConnectedPixmap.fill(Qt::transparent);
+		QPainter painter(&ConnectedPixmap);
+		painter.setBrush(Qt::green);
+		painter.drawEllipse(0,0,10,10);
+	}
+	return ConnectedPixmap;
 }
 
-const QColor & PinColors::Get(const OBSBlueprintPin *pin)
+const QPixmap & PinColors::DisconnectedIcon()
 {
-	return Get(pin->getPinType());
+	if(DisconnectedPixmap.isNull()) {
+		DisconnectedPixmap = QPixmap(10,10);
+		DisconnectedPixmap.fill(Qt::transparent);
+		QPainter painter(&DisconnectedPixmap);
+		painter.setBrush(Qt::red);
+		painter.drawEllipse(0,0,10,10);
+	}
+	return DisconnectedPixmap;
 }
 
-const QColor & PinColors::Get(const PinType &type)
-{
-	if(const auto it = Color.find(type); it != Color.end()) return it->second;
-	return Default;
-}
+std::unordered_map<PinType, QPixmap> PinColors::Pixmap{};
+std::unordered_map<PinType, QIcon> PinColors::Icon{};
+QPixmap PinColors::ConnectedPixmap{};
+QPixmap PinColors::DisconnectedPixmap{};
+

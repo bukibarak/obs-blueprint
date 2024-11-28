@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 #include "Helpers/global-logger.h"
+#include "Structs/multicast-delegate.h"
 
 class OBSBlueprintGraph;
 
@@ -37,10 +38,19 @@ public:
 	template<class T>const T& getValue() { return *static_cast<T*>(rawValuePtr); }
 	template<class T> void setValue(const T& value) { *static_cast<T*>(rawValuePtr) = value; }
 
+	void setDisplayName(const std::string& name)
+	{
+		GInfo("Variable '%s' of type %s was renamed to '%s'", getDisplayName(), PinName[getPinType()], name.c_str());
+		const std::string& old = name;
+		displayName = name;
+		onRename.execute(old, name);
+	}
 	const char* getDisplayName() const {return displayName.c_str();}
 
 	void setupGraph(OBSBlueprintGraph* graph) {parentGraph = graph;}
 	OBSBlueprintGraph* getParentGraph() const {return parentGraph;}
+
+	multicastDelegate_TwoParams<std::string, std::string> onRename;
 
 private:
 
@@ -57,7 +67,7 @@ private:
 	PinType pinType = UNKNOWN_PIN;
 	void* rawValuePtr = nullptr;
 	unsigned int rawValueSize = 0;
-	const std::string displayName;
+	std::string displayName;
 	std::function<void()> onDestructor;
 	OBSBlueprintGraph* parentGraph = nullptr;
 };

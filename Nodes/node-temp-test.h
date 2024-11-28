@@ -24,9 +24,6 @@ public:
 		}
 	}
 
-	OBSBlueprintInputPin* getInputPin() const { return inputPin; }
-	OBSBlueprintOutputPin* getOutputPin() const { return outputPin; }
-
 private:
 
 	video_frame emptyFrame;

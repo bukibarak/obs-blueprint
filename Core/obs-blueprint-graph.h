@@ -36,6 +36,7 @@ public:
 	void addVariable(OBSBlueprintVariable* variable);
 	void deleteVariable(OBSBlueprintVariable* variable);
 	const std::list<OBSBlueprintVariable*>& getVariables() const {return graphVariables;}
+	bool isVariableUsed(OBSBlueprintVariable* variable);
 
 	/**
 	 * Create a \c new connector between two pins on the graph.

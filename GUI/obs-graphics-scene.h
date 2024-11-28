@@ -4,6 +4,7 @@
 
 #include "Core/obs-blueprint-node.h"
 
+struct GUIContext;
 class OBSGraphicsPinInputField;
 class OBSGraphicsView;
 class OBSGraphicsPin;
@@ -12,16 +13,18 @@ class OBSGraphicsConnector;
 
 class OBSGraphicsScene : public QGraphicsScene {
 public:
-	OBSGraphicsScene(OBSBlueprintGraph* linkedGraph, QObject* parent = nullptr);
+	OBSGraphicsScene(GUIContext& context, QObject* parent = nullptr);
 
 	void initializeFromBlueprintGraph();
-	void setView(OBSGraphicsView* mainView);
 	OBSGraphicsNode* addGUINode(OBSBlueprintNode* node, qreal px, qreal py);
 	void removeGUINode(OBSGraphicsNode* node);
 	OBSGraphicsConnector* addGUIConnector(OBSBlueprintConnector* connector, OBSGraphicsPin* from, OBSGraphicsPin* to);
 	void removeGUIConnector(OBSGraphicsConnector* connector);
 
 	void resetZoomLevel() { zoomLevel = 0; }
+	void resetSelected();
+
+	bool isDropAccepted(const QPointF& scenePos) const;
 
 protected:
 	void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
@@ -41,9 +44,9 @@ private:
 	OBSGraphicsNode *showContextMenu(const QPointF &scenePos);
 	void forceGraphGUIOnBottom();
 
-	OBSGraphicsView* view = nullptr;
+	GUIContext& ctx;
 
-	OBSBlueprintGraph* graph = nullptr;
+
 	OBSGraphicsPin* graphVideoInputPin = nullptr;
 
 	int32_t zoomLevel = 0;
@@ -51,6 +54,7 @@ private:
 	Qt::MouseButton pressedButton;
 	OBSGraphicsPin* pressedPin = nullptr;
 	OBSGraphicsNode* pressedNode = nullptr;
+	OBSGraphicsNode* selectedNode = nullptr;
 	OBSGraphicsPinInputField* pressedInputField = nullptr;
 	QPointF pressedPosRelative;
 	bool mouseClicked = false;

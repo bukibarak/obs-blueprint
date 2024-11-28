@@ -2,6 +2,7 @@
 
 #include <QPainter>
 
+#include "obs-graphics-connector.h"
 #include "obs-graphics-pin-input-field.h"
 #include "Core/obs-blueprint-node.h"
 
@@ -10,6 +11,7 @@ OBSGraphicsNode::OBSGraphicsNode(OBSBlueprintNode *node, QGraphicsItem *parent) 
 	nodeNameFont.setPixelSize(40);
 	nodeNameFont.setBold(true);
 	pinNameFont.setPixelSize(25);
+	name = node->getDisplayName();
 
 	int leftPinPlaced = 0;
 	int rightPinPlaced = 0;
@@ -60,68 +62,13 @@ OBSGraphicsNode::OBSGraphicsNode(OBSBlueprintNode *node, QGraphicsItem *parent) 
 
 
 	calculateContentRect();
-
-
-	bool compactNode = node->getGraphicsOptions().isCompactNode;
-	bool showName = node->getGraphicsOptions().showName;
-	QPointF moveLeft{};
-	QPointF moveRight{};
-	if(!compactNode) {
-		moveLeft = {0, showName ? GUI_NODE_PINS_MARGIN : topPins.empty() ? pinsMargin.height() / 2 : 120};
-		moveRight = {nodeContentRect.x() + nodeContentRect.width(), showName ? GUI_NODE_PINS_MARGIN : topPins.empty() ? pinsMargin.height() / 2 : 120};
-	}
-	else if (showName) {
-		qreal leftPart = nodeContentRect.height() / 2;
-		qreal leftPinsHeight = calculatePinsLength(leftMap.size());
-		qreal beginTopPy = leftPart - (leftPinsHeight / 2);
-		moveLeft = {0, beginTopPy};
-
-		qreal rightPinsHeight = calculatePinsLength(rightPins.size());
-		qreal beginBottomPy = leftPart - (rightPinsHeight / 2);
-		moveRight = {nodeContentRect.x() + nodeContentRect.width(), beginBottomPy};
-	}
-	else {
-		if(topPins.empty()) {
-			moveRight = {nodeContentRect.x() + nodeContentRect.width(), 0};
-		}
-		else {
-			moveLeft = {0,120};
-			moveRight = {nodeContentRect.x() + nodeContentRect.width(), 120};
-		}
-	}
-
-	for(OBSGraphicsPin* pin: leftMap.keys()) {
-		pin->moveBy(moveLeft.x(), moveLeft.y());
-	}
-	for(OBSGraphicsPin* pin: rightPins) {
-		pin->moveBy(moveRight.x(), moveRight.y());
-	}
-
-
-
-	qreal leftPart =  nodeContentRect.width()/ 2;
-	qreal topPinsWidth = calculatePinsLength(topPins.size());
-	qreal beginTopPx =  leftPart - (topPinsWidth / 2);
-	for(OBSGraphicsPin* pin: topPins) {
-		pin->moveBy(beginTopPx + nodeContentRect.x(), 0);
-	}
-	qreal bottomPinsWidth = calculatePinsLength(bottomPins.size());
-	qreal beginBottomPx = leftPart - (bottomPinsWidth / 2);
-	for(OBSGraphicsPin* pin: bottomPins) {
-		pin->moveBy(beginBottomPx + nodeContentRect.x(), nodeContentRect.y() + nodeContentRect.height());
-	}
-
+	alignPins();
 }
 
 QRectF OBSGraphicsNode::boundingRect() const
 {
-	qreal width = nodeContentRect.width();
-	if(!leftMap.empty()) width += GUI_PIN_SIZE;
-	if(!rightPins.empty()) width += GUI_PIN_SIZE;
-	qreal height = nodeContentRect.height();
-	if(!topPins.empty()) height += GUI_PIN_SIZE;
-	if(!bottomPins.empty()) height += GUI_PIN_SIZE;
-	return {0, 0, width, height};
+	QSizeF size = calculateBoundingRect();
+	return {0, 0, size.width(), size.height()};
 }
 
 void OBSGraphicsNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
@@ -130,8 +77,28 @@ void OBSGraphicsNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 	Q_UNUSED(option)
 	Q_UNUSED(widget)
 
-	painter->setBrush(QBrush(Qt::lightGray, Qt::DiagCrossPattern));
+	if(name != node->getDisplayName()) {
+		name = node->getDisplayName();
+		prepareGeometryChange();
+		calculateContentRect();
+		alignPins();
+		for(auto connector : GUIOnly_getConnectors()) {
+			connector->redrawConnector();
+		}
+	}
+
+	painter->setBrush(QBrush(selected ? QColor(255,127,127) : Qt::lightGray, Qt::DiagCrossPattern));
 	painter->drawRect(nodeContentRect);
+
+	if(selected) {
+		QPen pen{Qt::red};
+		pen.setWidth(selectPenWidth);
+		painter->setBrush(QBrush());
+		QPen orig = painter->pen();
+		painter->setPen(pen);
+		painter->drawRect(nodeContentRect);
+		painter->setPen(orig);
+	}
 
 	if(node->getGraphicsOptions().showName) {
 		QRectF nodeNameTextRect;
@@ -143,7 +110,7 @@ void OBSGraphicsNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 		painter->setBrush(Qt::white);
 		painter->setFont(nodeNameFont);
 		QTextOption textOption(Qt::AlignHCenter | Qt::AlignVCenter);
-		painter->drawText(nodeNameTextRect, node->getDisplayName(), textOption);
+		painter->drawText(nodeNameTextRect, name, textOption);
 	}
 
 
@@ -201,6 +168,14 @@ void OBSGraphicsNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 			painter->drawText(textBounds, pinText, textOption);
 		}
 	}
+
+	// TODO REMOVE - DEBUG/TEST ONLY
+	// QPen p{Qt::yellow};
+	// p.setWidth(1.0);
+	// painter->setBrush(QBrush());
+	// painter->setPen(p);
+	// QSizeF s = calculateBoundingRect();
+	// painter->drawRect(0,0,s.width(), s.height());
 }
 
 OBSBlueprintNode * OBSGraphicsNode::getBlueprintNode() const
@@ -217,6 +192,16 @@ QList<OBSGraphicsConnector *> OBSGraphicsNode::GUIOnly_getConnectors() const
 		}
 	}
 	return list;
+}
+
+void OBSGraphicsNode::setSelectionState(bool state)
+{
+	if(selected != state) {
+		selected = state;
+		prepareGeometryChange();
+		calculateContentRect();
+		update();
+	}
 }
 
 void OBSGraphicsNode::calculateContentRect()
@@ -246,7 +231,7 @@ void OBSGraphicsNode::calculateContentRect()
 	// Get size according to node text
 	if(node->getGraphicsOptions().showName) {
 		QFontMetrics fm(nodeNameFont);
-		QSizeF nodeTextSize = fm.size(Qt::TextSingleLine, node->getDisplayName()) + nodeNamePadding + nodeNameMargin;
+		QSizeF nodeTextSize = fm.size(Qt::TextSingleLine, name) + nodeNamePadding + nodeNameMargin;
 		size.setWidth(qMax(size.width(), nodeTextSize.width()));
 		size.setHeight(qMax(size.height(), nodeTextSize.height()));
 	}
@@ -279,8 +264,106 @@ void OBSGraphicsNode::calculateContentRect()
 		}
 	}
 
+	if(selected) {
+		if(leftMap.empty()) {
+			topLeft.setX(selectPenWidth/2.0);
+		}
+		if(topPins.empty()) {
+			topLeft.setY(selectPenWidth/2.0);
+		}
+	}
+
 	// Set node content size
 	nodeContentRect = QRectF(topLeft, size);
+}
+
+QSizeF OBSGraphicsNode::calculateBoundingRect() const
+{
+	qreal width = nodeContentRect.width();
+	if(!leftMap.empty()) width += GUI_PIN_SIZE;
+	if(!rightPins.empty()) width += GUI_PIN_SIZE;
+	qreal height = nodeContentRect.height();
+	if(!topPins.empty()) height += GUI_PIN_SIZE;
+	if(!bottomPins.empty()) height += GUI_PIN_SIZE;
+	if(selected) {
+		if(leftMap.empty()) width += selectPenWidth / 2.0;
+		if(rightPins.empty()) width += selectPenWidth / 2.0;
+		if(topPins.empty()) height += selectPenWidth / 2.0;
+		if(bottomPins.empty()) height += selectPenWidth / 2.0;
+	}
+	return {width, height};
+}
+
+void OBSGraphicsNode::alignPins()
+{
+	if(alignLeft.manhattanLength() > 0) {
+		for(OBSGraphicsPin* pin: leftMap.keys()) {
+			pin->moveBy(-alignLeft.x(), -alignLeft.y()); // reset
+		}
+	}
+	if(alignRight.manhattanLength() > 0) {
+		for(OBSGraphicsPin* pin: rightPins) {
+			pin->moveBy(-alignRight.x(), -alignRight.y()); // reset
+		}
+	}
+	if(alignTop.manhattanLength() > 0) {
+		for(OBSGraphicsPin* pin: topPins) {
+			pin->moveBy(-alignTop.x(), -alignTop.y()); // reset
+		}
+	}
+	if(alignBottom.manhattanLength() > 0) {
+		for(OBSGraphicsPin* pin: bottomPins) {
+			pin->moveBy(-alignBottom.x(), -alignBottom.y()); // reset
+		}
+	}
+
+	bool compactNode = node->getGraphicsOptions().isCompactNode;
+	bool showName = node->getGraphicsOptions().showName;
+	if(!compactNode) {
+		alignLeft = {0, showName ? GUI_NODE_PINS_MARGIN : topPins.empty() ? pinsMargin.height() / 2 : 120};
+		alignRight = {nodeContentRect.x() + nodeContentRect.width(), showName ? GUI_NODE_PINS_MARGIN : topPins.empty() ? pinsMargin.height() / 2 : 120};
+	}
+	else if (showName) {
+		qreal leftPart = nodeContentRect.height() / 2;
+		qreal leftPinsHeight = calculatePinsLength(leftMap.size());
+		qreal beginTopPy = leftPart - (leftPinsHeight / 2);
+		alignLeft = {0, beginTopPy};
+
+		qreal rightPinsHeight = calculatePinsLength(rightPins.size());
+		qreal beginBottomPy = leftPart - (rightPinsHeight / 2);
+		alignRight = {nodeContentRect.x() + nodeContentRect.width(), beginBottomPy};
+	}
+	else {
+		if(topPins.empty()) {
+			alignRight = {nodeContentRect.x() + nodeContentRect.width(), 0};
+		}
+		else {
+			alignLeft = {0,120};
+			alignRight = {nodeContentRect.x() + nodeContentRect.width(), 120};
+		}
+	}
+
+	for(OBSGraphicsPin* pin: leftMap.keys()) {
+		pin->moveBy(alignLeft.x(), alignLeft.y());
+	}
+	for(OBSGraphicsPin* pin: rightPins) {
+		pin->moveBy(alignRight.x(), alignRight.y());
+	}
+
+	qreal leftPart =  nodeContentRect.width()/ 2;
+	qreal topPinsWidth = calculatePinsLength(topPins.size());
+	qreal beginTopPx =  leftPart - (topPinsWidth / 2);
+	qreal bottomPinsWidth = calculatePinsLength(bottomPins.size());
+	qreal beginBottomPx = leftPart - (bottomPinsWidth / 2);
+	alignTop = {beginTopPx + nodeContentRect.x(), 0};
+	alignBottom = {beginBottomPx + nodeContentRect.x(), nodeContentRect.y() + nodeContentRect.height()};
+
+	for(OBSGraphicsPin* pin: topPins) {
+		pin->moveBy(alignTop.x(), alignTop.y());
+	}
+	for(OBSGraphicsPin* pin: bottomPins) {
+		pin->moveBy(alignBottom.x(), alignBottom.y());
+	}
 }
 
 qreal OBSGraphicsNode::calculatePinsLength(size_t size)

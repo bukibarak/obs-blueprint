@@ -5,6 +5,7 @@
 
 #include "pin-type.h"
 #include "Helpers/global-logger.h"
+#include "Structs/multicast-delegate.h"
 
 class OBSBlueprintConnector;
 class OBSBlueprintGraph;
@@ -72,6 +73,11 @@ public:
 	 */
 	const char* getDisplayName() const { return displayName.c_str(); }
 
+	virtual bool isConnected() const = 0;
+
+	/** This delegate is called by OBSBlueprintConnector each time the connection change. Used to update UI */
+	multicastDelegate_ZeroParam onConnectionChanged;
+
 protected:
 
 	// Constructors (protected to prevent direct use of the class)
@@ -84,13 +90,19 @@ protected:
 		if(onDestructor) onDestructor();
 		else GWarn("Couldn't delete pin value ptr, possible memory leak!");
 		GInfo("%s '%s' destroyed", PinName[pinType], getDisplayName());
+		if(getPinType() == STRING_PIN) {
+			GDebug("%p", static_cast<std::string*>(rawValuePtr)->c_str());
+		}
 	}
 
 	template<class T> void initializeValue(const T& defaultValue)
 	{
 		rawValuePtr = new T(defaultValue);
 		rawValueSize = sizeof(T);
-		onDestructor = [this]() {delete static_cast<T*>(rawValuePtr);};
+		onDestructor = [this] {
+			T* test = static_cast<T*>(rawValuePtr);
+			delete test;
+		};
 	}
 
 	std::function<void()> onDestructor;
@@ -143,7 +155,7 @@ public:
 	const std::list<OBSBlueprintConnector*>& getConnectors() const { return connectors; }
 
 	/** @return \c true if the pin have at least one connector, \c false otherwise. */
-	bool isConnected() const { return !connectors.empty(); }
+	bool isConnected() const  { return !connectors.empty(); }
 
 private:
 

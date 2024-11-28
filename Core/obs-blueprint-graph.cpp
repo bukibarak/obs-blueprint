@@ -37,6 +37,7 @@ extern "C" {
 		createConnector(imageSourceNode->getOutputPins()[0], mainVideoInput);
 
 		OBSBlueprintVariable* v1 = OBSBlueprintVariable::CreateVariable<float>(FLOAT_PIN, "My float variable");
+		v1->setValue(100.0f);
 		addVariable(v1);
 
 		OBSBlueprintVariable* v2 = OBSBlueprintVariable::CreateVariable<bool>(BOOLEAN_PIN, "My bool variable");
@@ -141,8 +142,15 @@ void OBSBlueprintGraph::deleteVariable(OBSBlueprintVariable *variable)
 {
 	mutex().lock();
 	graphVariables.remove(variable);
+	// TODO DELETE NODES LINKED TO VARIABLES!
 	delete variable;
 	mutex().unlock();
+}
+
+bool OBSBlueprintGraph::isVariableUsed(OBSBlueprintVariable *variable)
+{
+	return false;
+	// TODO CHECK WITH NODES IF USED
 }
 
 OBSBlueprintConnector* OBSBlueprintGraph::createConnector(OBSBlueprintOutputPin *from,

@@ -3,9 +3,11 @@
 
 #include "Structs/multicast-delegate.h"
 
+struct GUIContext;
+
 class OBSGraphicsView: public QGraphicsView {
 public:
-	OBSGraphicsView(QWidget* parent = nullptr);
+	OBSGraphicsView(GUIContext& context, QWidget* parent = nullptr);
 
 	QRectF getSceneViewport() const;
 	void resetScroll();
@@ -20,7 +22,15 @@ protected:
 	void resizeEvent(QResizeEvent *event) override;
 	void wheelEvent(QWheelEvent *event) override;
 
+	void dragEnterEvent(QDragEnterEvent *event) override;
+	void dragMoveEvent(QDragMoveEvent *event) override;
+	void dropEvent(QDropEvent *event) override;
+
+	void focusInEvent(QFocusEvent *event) override;
+
 private:
+
+	GUIContext& ctx;
 
 	bool mouseRightClick = false;
 	bool mouseMove = false;
