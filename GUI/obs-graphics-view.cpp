@@ -1,12 +1,10 @@
 ﻿#include "obs-graphics-view.h"
 
-#include <qevent.h>
 #include <QMenu>
 #include <QScrollBar>
 
 #include "gui-graph.h"
 #include "obs-graphics-scene.h"
-#include "Core/obs-blueprint-graph.h"
 #include "Core/obs-blueprint-variable.h"
 #include "Nodes/Variables/node-variable-get.h"
 #include "Variables/gui-variables-widget.h"
@@ -128,7 +126,6 @@ void OBSGraphicsView::dropEvent(QDropEvent *event)
 		}
 
 		if(node != nullptr) {
-			ctx.graph->addNode(node);
 			QPointF pos = mapToScene(event->position().toPoint());
 			ctx.scene->addGUINode(node, pos.x(), pos.y());
 		}

@@ -1,16 +1,17 @@
 ﻿#include "obs-graphics-type-field.h"
 
 #include <QCheckBox>
+#include <QComboBox>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QIntValidator>
 #include <QLabel>
+#include <QVBoxLayout>
 
-#include "Core/pin-type.h"
 #include "Helpers/global-logger.h"
 
 OBSGraphicsTypeField::OBSGraphicsTypeField(const PinType &pinType,
-                                           QWidget *parent, const QString& value) : QWidget(parent), type(pinType)
+	QWidget *parent, const QString& value, bool withLayout) : QWidget(parent), type(pinType)
 {
 	switch (pinType) {
 	case VIDEO_PIN:
@@ -18,11 +19,11 @@ OBSGraphicsTypeField::OBSGraphicsTypeField(const PinType &pinType,
 		break;
 	case EXECUTION_PIN:
 		buttonField = new QPushButton("Execute", this);
-		connect(buttonField, &QPushButton::clicked, [this](const bool&) {onValueChanged.execute("EXECUTE");});
+		connection = connect(buttonField, &QPushButton::clicked, [this](const bool&) {onValueChanged.execute("EXECUTE");});
 		break;
 	case BOOLEAN_PIN:
 		checkField = new QCheckBox(this);
-		connect(checkField, &QCheckBox::checkStateChanged, [this](const Qt::CheckState& state) {onValueChanged.execute(state == Qt::Checked ? "1" : "0");});
+		connection = connect(checkField, &QCheckBox::checkStateChanged, [this](const Qt::CheckState& state) {onValueChanged.execute(state == Qt::Checked ? "1" : "0");});
 		break;
 	case BYTE_PIN:
 		lineField = new QLineEdit(this);
@@ -56,27 +57,52 @@ OBSGraphicsTypeField::OBSGraphicsTypeField(const PinType &pinType,
 		labelField = new QLabel("???", this);
 	}
 
+	if(withLayout) {
+		QLayout* layout = new QHBoxLayout(this);
+		layout->setContentsMargins(0,0,0,0);
+		if(labelField != nullptr) {
+			layout->addWidget(labelField);
+		}
+		else if(buttonField != nullptr) {
+			layout->addWidget(buttonField);
+		}
+		else if(checkField != nullptr) {
+			layout->addWidget(checkField);
+		}
+		else if(lineField != nullptr) {
+			layout->addWidget(lineField);
+		}
+		else if(listField != nullptr) {
+			layout->addWidget(listField);
+		}
+	}
 
-	if(lineField != nullptr) {
-		connect(lineField, &QLineEdit::editingFinished, [this] {onValueChanged.execute(lineField->text());});
-		setFixedHeight(lineField->height() + 5);
+	else if(lineField != nullptr) {
+		connection = connect(lineField, &QLineEdit::editingFinished, [this] {onValueChanged.execute(lineField->text());});
 	}
 
 	if(!value.isEmpty())
 		setValue(value);
 }
 
+OBSGraphicsTypeField::~OBSGraphicsTypeField()
+{
+	disconnect(connection);
+}
+
 void OBSGraphicsTypeField::setValue(const QString &value)
 {
 	switch (type) {
 	case VIDEO_PIN:
-		labelField->setText(value);
+		if(labelField)
+			labelField->setText(value);
 		break;
 	case EXECUTION_PIN:
 		GWarn("Cannot set field value of type EXECUTE_PIN, will be ignored...");
 		break;
 	case BOOLEAN_PIN:
-		checkField->setChecked(value != "0");
+		if(checkField)
+			checkField->setChecked(value != "0");
 		break;
 	case BYTE_PIN:
 	case INT_PIN:
@@ -84,10 +110,12 @@ void OBSGraphicsTypeField::setValue(const QString &value)
 	case CHAR_PIN:
 	case STRING_PIN:
 	case COLOR_PIN:
-		lineField->setText(value);
+		if(lineField)
+			lineField->setText(value);
 		break;
 	default:
-		labelField->setText("??? (" + value + ")");
+		if(labelField)
+			labelField->setText("??? (" + value + ")");
 	}
 
 	onValueChanged.execute(value);

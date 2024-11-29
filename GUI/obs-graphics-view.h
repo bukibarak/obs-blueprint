@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <QGraphicsView>
 
+#include "Helpers/global-logger.h"
 #include "Structs/multicast-delegate.h"
 
 struct GUIContext;
@@ -8,6 +9,7 @@ struct GUIContext;
 class OBSGraphicsView: public QGraphicsView {
 public:
 	OBSGraphicsView(GUIContext& context, QWidget* parent = nullptr);
+	~OBSGraphicsView() override { GDebug("[GUI] Graph View and all child graphics objects deleted!");}
 
 	QRectF getSceneViewport() const;
 	void resetScroll();
@@ -34,5 +36,5 @@ private:
 
 	bool mouseRightClick = false;
 	bool mouseMove = false;
-	bool canScrollContent() { return mouseRightClick && mouseMove; }
+	bool canScrollContent() const { return mouseRightClick && mouseMove; }
 };

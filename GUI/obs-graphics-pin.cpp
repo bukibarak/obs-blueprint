@@ -25,11 +25,10 @@ void OBSGraphicsPin::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
 	Q_UNUSED(widget)
 
 	bool isInputPin = inputPin != nullptr;
-	bool isConnected = isInputPin ? inputPin->isConnected() : outputPin->isConnected();
 	PinType pinType = getBlueprintPin()->getPinType();
 
 	drawPinContent(painter, pinType);
-	painter->setBrush(isConnected ? Qt::green : Qt::red);
+	painter->setBrush(getBlueprintPin()->isConnected() ? Qt::green : Qt::red);
 	if(isInputPin && IsVerticalPin(pinType)) drawTopPinCorners(painter);
 	else if(isInputPin) drawLeftPinCorners(painter);
 	else if(IsVerticalPin(pinType)) drawBottomPinCorners(painter);
@@ -47,7 +46,6 @@ void OBSGraphicsPin::connect(OBSGraphicsConnector *connector)
 {
 	connectors.push_back(connector);
 	if(connectors.size() == 1) {
-		if(onConnectionStateChanged) onConnectionStateChanged->operator()(true);
 		update();
 	}
 }
@@ -56,7 +54,6 @@ void OBSGraphicsPin::disconnect(OBSGraphicsConnector* connector)
 {
 	connectors.removeOne(connector);
 	if(connectors.isEmpty()) {
-		if(onConnectionStateChanged) onConnectionStateChanged->operator()(false);
 		update();
 	}
 }
@@ -66,28 +63,28 @@ void OBSGraphicsPin::drawPinContent(QPainter *painter, PinType pinType)
 	painter->fillRect(QRect(0, 0, GUI_PIN_SIZE, GUI_PIN_SIZE), PinColors::Get(pinType));
 }
 
-void OBSGraphicsPin::drawTopPinCorners(QPainter *painter)
+void OBSGraphicsPin::drawTopPinCorners(QPainter *painter) const
 {
 	painter->fillRect(leftCorner, painter->brush());
 	painter->fillRect(rightCorner, painter->brush());
 	painter->fillRect(bottomCorner, painter->brush());
 }
 
-void OBSGraphicsPin::drawBottomPinCorners(QPainter *painter)
+void OBSGraphicsPin::drawBottomPinCorners(QPainter *painter) const
 {
 	painter->fillRect(leftCorner, painter->brush());
 	painter->fillRect(rightCorner, painter->brush());
 	painter->fillRect(topCorner, painter->brush());
 }
 
-void OBSGraphicsPin::drawLeftPinCorners(QPainter *painter)
+void OBSGraphicsPin::drawLeftPinCorners(QPainter *painter) const
 {
 	painter->fillRect(rightCorner, painter->brush());
 	painter->fillRect(topCorner, painter->brush());
 	painter->fillRect(bottomCorner, painter->brush());
 }
 
-void OBSGraphicsPin::drawRightPinCorners(QPainter *painter)
+void OBSGraphicsPin::drawRightPinCorners(QPainter *painter) const
 {
 	painter->fillRect(leftCorner, painter->brush());
 	painter->fillRect(topCorner, painter->brush());

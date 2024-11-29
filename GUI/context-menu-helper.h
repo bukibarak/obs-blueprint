@@ -1,7 +1,5 @@
 ﻿#pragma once
-#include <QMenu>
 
-#include "Core/obs-blueprint-node.h"
 #include "Nodes/Video/node-color-source.h"
 #include "Nodes/Waves/node-sinus-time.h"
 #include "Nodes/Numbers/Float/node-float-abs.h"

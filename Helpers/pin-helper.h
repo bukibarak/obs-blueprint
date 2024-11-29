@@ -1,11 +1,7 @@
 ﻿#pragma once
 #include <QIcon>
-#include <unordered_map>
-#include <string>
 
-#include "Core/obs-blueprint-pin.h"
 #include "Core/obs-blueprint-variable.h"
-#include "Core/pin-type.h"
 #include "GUI/obs-graphics-pin.h"
 
 namespace TypeConverter {

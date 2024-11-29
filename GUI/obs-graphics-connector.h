@@ -18,8 +18,8 @@ public:
 	OBSBlueprintConnector* getBlueprintConnector() const {return connector;}
 	OBSGraphicsPin* getFromPin() const {return from;}
 	OBSGraphicsPin* getToPin() const {return to;}
-	OBSGraphicsPin* getOther(OBSGraphicsPin* self) const {return self == from ? to : self == to ? from : nullptr;}
-	OBSGraphicsNode* getOtherNode(OBSGraphicsNode* self) const;
+	OBSGraphicsPin* getOther(const OBSGraphicsPin* self) const {return self == from ? to : self == to ? from : nullptr;}
+	OBSGraphicsNode* getOtherNode(const OBSGraphicsNode* self) const;
 	void redrawConnector();
 
 private:

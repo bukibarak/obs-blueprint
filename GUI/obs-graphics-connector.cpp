@@ -2,7 +2,6 @@
 
 #include <QPainter>
 
-#include "obs-graphics-pin.h"
 #include "Helpers/pin-helper.h"
 
 OBSGraphicsConnector::OBSGraphicsConnector(OBSBlueprintConnector *connector, OBSGraphicsPin *fromPin,
@@ -25,13 +24,13 @@ void OBSGraphicsConnector::paint(QPainter *painter,
 
 
 	painter->setPen(pen);
-	if(xMin == xMax && yMin == yMax) {
+	if(qFuzzyCompare(xMin, xMax) && qFuzzyCompare(yMin, yMax)) {
 		painter->drawLine(0, 0, 0, 0);
 	}
-	else if(xMin == xMax) {
+	else if(qFuzzyCompare(xMin, xMax)) {
 		painter->drawLine(0, 0, 0, qAbs(yMax - yMin));
 	}
-	else if(yMin == yMax) {
+	else if(qFuzzyCompare(yMin, yMax)) {
 		painter->drawLine(0, 0, qAbs(xMax - xMin), 0);
 	}
 	else {
@@ -44,7 +43,7 @@ void OBSGraphicsConnector::paint(QPainter *painter,
 	}
 }
 
-OBSGraphicsNode * OBSGraphicsConnector::getOtherNode(OBSGraphicsNode *self) const
+OBSGraphicsNode * OBSGraphicsConnector::getOtherNode(const OBSGraphicsNode* self) const
 {
 	return self == from->getParentNode() ? to->getParentNode() : self == to->getParentNode() ? from->getParentNode() : nullptr;
 }
@@ -62,13 +61,13 @@ void OBSGraphicsConnector::redrawConnector()
 	qreal yMin = top->scenePos().y() + top->sceneBoundingRect().height()/2;
 	qreal yMax = bottom->scenePos().y() + bottom->sceneBoundingRect().height()/2;
 
-	if(xMin == xMax && yMin == yMax) {
+	if(qFuzzyCompare(xMin, xMax) && qFuzzyCompare(yMin, yMax)) {
 		// Both pins are in the same position, dunno what to do...
 	}
-	else if(xMin == xMax) {
+	else if(qFuzzyCompare(xMin, xMax)) {
 		bounds = QRectF(0, 0, 1, qAbs(yMax - yMin));
 	}
-	else if(yMin == yMax) {
+	else if(qFuzzyCompare(yMin, yMax)) {
 		bounds = QRectF(0, 0, qAbs(xMax - xMin), 1);
 	}
 	else {

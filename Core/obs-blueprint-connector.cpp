@@ -48,5 +48,6 @@ void OBSBlueprintConnector::propagateData() const
 		toPin->setValue(fromPin->getValue<std::string>()); // TODO cannot memcpy std::string!!! --> use const char* instead??
 	} else {
 		memcpy(toPin->rawValuePtr, fromPin->rawValuePtr, size);
+		toPin->onValueChanged.execute();
 	}
 }

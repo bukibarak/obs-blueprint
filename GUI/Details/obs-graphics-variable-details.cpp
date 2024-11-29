@@ -3,12 +3,9 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
-#include "Core/obs-blueprint-variable.h"
 #include "GUI/gui-graph.h"
 #include "GUI/obs-graphics-type-field.h"
 #include "GUI/obs-graphics-view.h"
-#include "GUI/Variables/gui-variables-widget.h"
-#include "Helpers/pin-helper.h"
 
 OBSGraphicsVariableDetails::OBSGraphicsVariableDetails(GUIContext& context,
 	QWidget *parent) : QWidget(parent), ctx(context), var(context.selectedVariable)
@@ -49,11 +46,16 @@ OBSGraphicsVariableDetails::OBSGraphicsVariableDetails(GUIContext& context,
 	layout->addSpacing(5);
 
 	QHBoxLayout* valueLayout = new QHBoxLayout();
+	valueLayout->setSizeConstraint(QLayout::SetNoConstraint);
 	QLabel* valueLabel = new QLabel("Value:", this);
 	valueEdit = new OBSGraphicsTypeField(var->getPinType(), this, TypeConverter::AsString(var).c_str());
 	valueEdit->onValueChanged += onValueChanged;
+	// valueEdit->setFixedWidth(valueEdit->width());
+	// valueEdit->setFixedHeight(valueEdit->height());
+	//valueEdit->setStyleSheet("border: 1px solid red;");
 	valueLayout->addWidget(valueLabel);
 	valueLayout->addWidget(valueEdit);
+	valueLayout->addStretch();
 	layout->addLayout(valueLayout);
 
 
@@ -64,6 +66,9 @@ OBSGraphicsVariableDetails::OBSGraphicsVariableDetails(GUIContext& context,
 	typeLabel->setFixedWidth(labelWidth);
 	nameLabel->setFixedWidth(labelWidth);
 	valueLabel->setFixedWidth(labelWidth);
+
+	valueLabel->setStyleSheet("border: 1px solid green;");
+	valueEdit->setStyleSheet("border: 1px solid red;");
 }
 
 OBSGraphicsVariableDetails::~OBSGraphicsVariableDetails()

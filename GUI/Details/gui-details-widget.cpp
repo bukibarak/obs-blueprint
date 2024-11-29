@@ -28,8 +28,18 @@ GUIDetailsWidget::GUIDetailsWidget(GUIContext &context, QWidget *parent) : QWidg
 
 GUIDetailsWidget::~GUIDetailsWidget()
 {
+	GDebug("[GUI] Details widget and all child widgets deleted!");
 	// ctx.onSelectionChanged -= onSelectionChanged;
 }
+
+void GUIDetailsWidget::hideEvent(QHideEvent *event)
+{
+	QWidget::hideEvent(event);
+	ctx.selectedNode = nullptr;
+	ctx.selectedVariable = nullptr;
+	selectionChanged();
+}
+
 
 
 void GUIDetailsWidget::selectionChanged()

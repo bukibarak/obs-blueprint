@@ -8,7 +8,7 @@
 
 std::string TypeConverter::AsString(OBSBlueprintPin *pin)
 {
-	std::stringstream ss;
+
 	switch (pin->getPinType()) {
 	case EXECUTION_PIN:
 		return "EXECUTE";
@@ -18,16 +18,32 @@ std::string TypeConverter::AsString(OBSBlueprintPin *pin)
 		return std::to_string(pin->getValue<uint8_t>());
 	case INT_PIN:
 		return std::to_string(pin->getValue<int32_t>());
-	case FLOAT_PIN:
+	case FLOAT_PIN: {
+		std::stringstream ss;
 		ss << std::setprecision(8) << std::noshowpoint << pin->getValue<float>();
 		return ss.str();
+	}
+
 	case CHAR_PIN:
 		return {1, pin->getValue<char>()};
 	case STRING_PIN:
 		return pin->getValue<std::string>();
-	case COLOR_PIN:
+	case COLOR_PIN: {
+		std::stringstream ss;
 		ss << std::hex << std::uppercase << pin->getValue<uint32_t>();
 		return ss.str();
+	}
+
+	case VIDEO_PIN: {
+		std::stringstream ss;
+		video_frame* frame = pin->getValuePtr<video_frame>();
+		ss << frame->width << "x" << frame->height;
+		return ss.str();
+	}
+	case AUDIOVIDEO_PIN:
+		// TODO
+	case AUDIO_PIN:
+		// TODO
 	default:
 		return "";
 	}

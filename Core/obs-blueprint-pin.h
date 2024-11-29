@@ -60,7 +60,7 @@ public:
 	 * @tparam T  The pin data type (not as a pointer).
 	 * @param value The new value that will be copied to the pin value ptr.
 	 */
-	template<class T> void setValue(const T& value) { *static_cast<T*>(rawValuePtr) = value; }
+	template<class T> void setValue(const T& value) { *static_cast<T*>(rawValuePtr) = value; onValueChanged.execute(); }
 	// {
 	// 	unsigned int valueSize = sizeof(T);
 	// 	if(valueSize != rawValueSize) GError("SIZE MISMATCH when trying to set value, unexpected behavior may happen! %u (given) != %u (stored)", sizeof(T), rawValueSize);
@@ -75,8 +75,11 @@ public:
 
 	virtual bool isConnected() const = 0;
 
-	/** This delegate is called by OBSBlueprintConnector each time the connection change. Used to update UI */
+	/** This delegate is called by each time the connection change, see \c OBSBlueprintConnector . Used to update UI */
 	multicastDelegate_ZeroParam onConnectionChanged;
+
+	/** This delegate is called each time the value change. Used to update UI */
+	multicastDelegate_ZeroParam onValueChanged;
 
 protected:
 
@@ -90,9 +93,6 @@ protected:
 		if(onDestructor) onDestructor();
 		else GWarn("Couldn't delete pin value ptr, possible memory leak!");
 		GInfo("%s '%s' destroyed", PinName[pinType], getDisplayName());
-		if(getPinType() == STRING_PIN) {
-			GDebug("%p", static_cast<std::string*>(rawValuePtr)->c_str());
-		}
 	}
 
 	template<class T> void initializeValue(const T& defaultValue)

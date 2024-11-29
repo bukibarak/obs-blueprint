@@ -9,7 +9,10 @@ struct GUIContext;
 class GUIDetailsWidget : public QWidget {
 public:
 	GUIDetailsWidget(GUIContext& context, QWidget *parent = nullptr);
-	~GUIDetailsWidget();
+	~GUIDetailsWidget() override;
+
+protected:
+	void hideEvent(QHideEvent *event) override;
 
 
 private:

@@ -14,6 +14,7 @@
 
 GUIGraph::GUIGraph(OBSBlueprintGraph *attachedGraph) : graph(attachedGraph)
 {
+
 	ctx.graph = graph;
 	ctx.GUIgraph = this;
 	window = new QWidget(static_cast<QWidget *>(obs_frontend_get_main_window()), Qt::Window | Qt::CustomizeWindowHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
@@ -48,7 +49,7 @@ GUIGraph::~GUIGraph()
 }
 
 
-void GUIGraph::show()
+void GUIGraph::show() const
 {
 	// Hide default OBS properties window, TODO how to do it better? maybe even prevent properties window creation?
 	const QWindowList list = QApplication::topLevelWindows();

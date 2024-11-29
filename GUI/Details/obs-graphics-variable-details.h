@@ -11,7 +11,7 @@ class OBSBlueprintVariable;
 class OBSGraphicsVariableDetails : public QWidget {
 public:
 	OBSGraphicsVariableDetails(GUIContext& context, QWidget* parent = nullptr);
-	~OBSGraphicsVariableDetails();
+	~OBSGraphicsVariableDetails() override;
 
 private:
 

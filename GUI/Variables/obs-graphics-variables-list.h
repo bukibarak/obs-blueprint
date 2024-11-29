@@ -8,10 +8,9 @@ class OBSGraphicsVariablesList : public QListWidget {
 public:
 
 	OBSGraphicsVariablesList(GUIContext& context, GUIVariablesWidget* parent);
-	~OBSGraphicsVariablesList();
+	~OBSGraphicsVariablesList() override;
 
 	QListWidgetItem* selectedItem() const;
-
 	void resetSelected() const;
 
 protected:

@@ -11,7 +11,7 @@ class OBSBlueprintGraph;
 class GUIVariablesWidget : public QWidget {
 public:
 	GUIVariablesWidget(GUIContext& context, QWidget *parent = nullptr);
-	~GUIVariablesWidget();
+	~GUIVariablesWidget() override;
 
 	bool tryCreate(OBSBlueprintVariable* variable);
 	bool tryRename(QListWidgetItem* item);

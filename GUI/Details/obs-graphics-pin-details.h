@@ -1,10 +1,11 @@
 ﻿#pragma once
 #include <QLabel>
-#include <QWidget>
+#include <QMutex>
 
-#include "Core/obs-blueprint-pin.h"
+#include "GUI/obs-graphics-type-field.h"
 #include "Helpers/pin-helper.h"
 
+class OBSGraphicsTypeField;
 class QLabel;
 struct GUIContext;
 class OBSBlueprintPin;
@@ -12,24 +13,38 @@ class OBSBlueprintPin;
 class OBSGraphicsPinDetails : public QWidget {
 public:
 	OBSGraphicsPinDetails(GUIContext& context, OBSBlueprintPin* pin, QWidget* parent = nullptr, bool forceReadOnly = false);
-	~OBSGraphicsPinDetails();
+	~OBSGraphicsPinDetails() override;
 
 private:
+
+	QMutex mutex;
+
 	GUIContext& ctx;
-	OBSBlueprintPin* pin;
+	OBSBlueprintPin* pin = nullptr;
+	OBSGraphicsTypeField* value = nullptr;
 	bool readOnly;
 	bool graphDeleted = false;
-	const QPixmap* connectionPixmap;
-	QLabel* connectionLabel;
+	QLabel* connectionLabel = nullptr;
 
-	std::function<void()> onConnectionStateChanged = [this] {
-		if(!readOnly) {
-			if(pin->isConnected()) connectionPixmap = &PinColors::ConnectedIcon();
-			else connectionPixmap = &PinColors::DisconnectedIcon();
-			connectionLabel->setPixmap(*connectionPixmap);
-			connectionLabel->update();
+	std::function<void()> pinConnectionStateChanged = [this] {
+		connectionLabel->setPixmap(pin->isConnected() ? PinColors::ConnectedIcon() : PinColors::DisconnectedIcon());
+		connectionLabel->update();
+
+		if(!readOnly && mutex.try_lock()) {
+			value->setEnabled(!pin->isConnected());
+			mutex.unlock();
 		}
 	};
+
+	std::function<void()> pinValueChanged = [this] {
+		if(value && mutex.try_lock()) {
+			value->setValue(TypeConverter::AsString(pin).c_str());
+			mutex.unlock();
+		}
+	};
+
 	std::function<void()> onGraphDeleted = [this] {graphDeleted = true;};
+
+
 
 };

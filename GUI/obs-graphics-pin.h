@@ -31,20 +31,18 @@ public:
 
 	void connect(OBSGraphicsConnector* connector);
 	void disconnect(OBSGraphicsConnector* connector);
-	bool isConnected() const {return !connectors.isEmpty(); }
-
-	std::function<void(bool)>* onConnectionStateChanged = nullptr;
+	// bool isConnected() const {return !connectors.isEmpty(); }
 
 private:
 
 	OBSGraphicsNode* parentNode = nullptr;
 	QList<OBSGraphicsConnector*> connectors;
 
-	void drawPinContent(QPainter *painter, PinType pinType);
-	void drawTopPinCorners(QPainter *painter);
-	void drawBottomPinCorners(QPainter *painter);
-	void drawLeftPinCorners(QPainter *painter);
-	void drawRightPinCorners(QPainter *painter);
+	static void drawPinContent(QPainter *painter, PinType pinType);
+	void drawTopPinCorners(QPainter *painter) const;
+	void drawBottomPinCorners(QPainter *painter) const;
+	void drawLeftPinCorners(QPainter *painter) const;
+	void drawRightPinCorners(QPainter *painter) const;
 
 	const QRect leftCorner{0, 0, GUI_PIN_CORNER_SIZE, GUI_PIN_SIZE};
 	const QRect rightCorner{GUI_PIN_SIZE - GUI_PIN_CORNER_SIZE, 0, GUI_PIN_CORNER_SIZE, GUI_PIN_SIZE};

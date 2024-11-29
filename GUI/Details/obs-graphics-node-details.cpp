@@ -1,6 +1,5 @@
 ﻿#include "obs-graphics-node-details.h"
 
-#include <QLabel>
 #include <QVBoxLayout>
 
 #include "obs-graphics-pin-details.h"
@@ -32,17 +31,23 @@ OBSGraphicsNodeDetails::OBSGraphicsNodeDetails(GUIContext &context,
 	outputLabel->setStyleSheet("text-decoration: underline;");
 	layout->addSpacing(5);
 	layout->addWidget(outputLabel);
+	for(auto pin : node->getOutputPins()) {
+		OBSGraphicsPinDetails* pinDetails = new OBSGraphicsPinDetails(ctx, pin, this);
+		layout->addWidget(pinDetails);
+	}
+
+	QLabel* inputLabel = new QLabel("Input pins:", this);
+	inputLabel->setStyleSheet("text-decoration: underline;");
+	layout->addSpacing(5);
+	layout->addWidget(inputLabel);
+	for(auto pin : node->getInputPins()) {
+		OBSGraphicsPinDetails* pinDetails = new OBSGraphicsPinDetails(ctx, pin, this);
+		layout->addWidget(pinDetails);
+	}
 
 	int labelWidth = qMax(selectedLabel->width(), nameLabel->width());
 	selectedLabel->setFixedWidth(labelWidth);
 	nameLabel->setFixedWidth(labelWidth);
 
-	for(auto pin : node->getOutputPins()) {
-		OBSGraphicsPinDetails* pinDetails = new OBSGraphicsPinDetails(ctx, pin, this);
-		layout->addWidget(pinDetails);
-	}
-}
-
-OBSGraphicsNodeDetails::~OBSGraphicsNodeDetails()
-{
+	layout->addStretch();
 }

@@ -1,20 +1,17 @@
 ﻿#pragma once
 #include <QFont>
-#include <QGraphicsObject>
 
 #include "obs-graphics-pin.h"
 
+struct GUIContext;
 class OBSGraphicsPinInputField;
-class OBSGraphicsConnector;
 
-// #define GUI_NODE_WIDTH 500
-// #define GUI_NODE_HEIGHT 700
 #define GUI_NODE_PINS_MARGIN 170
 
 class OBSGraphicsNode : public QGraphicsObject {
 public:
 	enum { Type = UserType + 2 };
-	OBSGraphicsNode(OBSBlueprintNode* node, QGraphicsItem* parent = nullptr);
+	OBSGraphicsNode(GUIContext& context, OBSBlueprintNode* node, QGraphicsItem* parent = nullptr);
 
 	QRectF boundingRect() const override;
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;

@@ -6,7 +6,6 @@
 
 struct GUIContext;
 class OBSGraphicsPinInputField;
-class OBSGraphicsView;
 class OBSGraphicsPin;
 class OBSGraphicsNode;
 class OBSGraphicsConnector;
@@ -16,10 +15,10 @@ public:
 	OBSGraphicsScene(GUIContext& context, QObject* parent = nullptr);
 
 	void initializeFromBlueprintGraph();
-	OBSGraphicsNode* addGUINode(OBSBlueprintNode* node, qreal px, qreal py);
-	void removeGUINode(OBSGraphicsNode* node);
-	OBSGraphicsConnector* addGUIConnector(OBSBlueprintConnector* connector, OBSGraphicsPin* from, OBSGraphicsPin* to);
-	void removeGUIConnector(OBSGraphicsConnector* connector);
+	OBSGraphicsNode* addGUINode(OBSBlueprintNode* node, qreal px, qreal py, bool addToBlueprintGraph = true);
+	void removeGUINode(OBSGraphicsNode* node, bool removeFromBlueprintGraph = true);
+	OBSGraphicsConnector* addGUIConnector(OBSGraphicsPin* from, OBSGraphicsPin* to, OBSBlueprintConnector* existing = nullptr);
+	void removeGUIConnector(OBSGraphicsConnector* connector, bool removeFromBlueprintGraph = true);
 
 	void resetZoomLevel() { zoomLevel = 0; }
 	void resetSelected();
@@ -42,7 +41,7 @@ private:
 
 	bool tryConnectPins(OBSGraphicsPin* A, OBSGraphicsPin* B);
 	OBSGraphicsNode *showContextMenu(const QPointF &scenePos);
-	void forceGraphGUIOnBottom();
+	void forceGraphGUIOnBottom() const;
 
 	GUIContext& ctx;
 

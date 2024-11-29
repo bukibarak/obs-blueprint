@@ -55,10 +55,7 @@ void NodeColorSource::execute(float deltaSeconds)
 			}
 		}
 
-		video_frame* outputVideoPin = pinVideo->getValuePtr<video_frame>();
-		outputVideoPin->width = width;
-		outputVideoPin->height = height;
-		outputVideoPin->pixels = pixels;
+		pinVideo->setValue(video_frame(width, height, pixels));
 
 		haveExecutedThisCycle = true;
 	}

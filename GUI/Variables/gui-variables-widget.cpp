@@ -2,15 +2,12 @@
 
 #include <QHBoxLayout>
 #include <QInputDialog>
-#include <QKeyEvent>
-#include <QLabel>
 #include <QMenu>
 #include <QMessageBox>
 #include <QPushButton>
 
 #include "obs-graphics-variables-list.h"
 #include "Core/obs-blueprint-graph.h"
-#include "Core/obs-blueprint-variable.h"
 #include "GUI/gui-graph.h"
 #include "GUI/obs-graphics-scene.h"
 #include "Helpers/obs-blueprint-factory.h"
@@ -50,6 +47,7 @@ GUIVariablesWidget::GUIVariablesWidget(GUIContext& context,
 
 GUIVariablesWidget::~GUIVariablesWidget()
 {
+	GDebug("[GUI] Variable widget and all child widgets deleted!");
 	if(connection)
 		disconnect(connection);
 
@@ -145,14 +143,12 @@ void GUIVariablesWidget::showContextMenu(const QPoint &pos)
 	QAction* string = menu.addAction("String variable");
 	QAction* color = menu.addAction("Color variable");
 
-	QAction* selected = menu.exec(pos);
-
-	if(selected) {
+	if(QAction* selected = menu.exec(pos)) {
 		QString name = QInputDialog::getText(this, "New variable name", "Variable name:", QLineEdit::Normal, "My variable");
 		if(name.isEmpty())
 			name = "My variable";
-		std::string sname = name.toStdString();
-		const char* cname = sname.c_str();
+		std::string stdName = name.toStdString();
+		const char* cname = stdName.c_str();
 		OBSBlueprintVariable* created = nullptr;
 		if(selected == video)
 			created = OBSBlueprintFactory::CreateVideoVariable(cname);

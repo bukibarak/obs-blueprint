@@ -1,8 +1,6 @@
 ﻿#include "obs-graphics-variables-list.h"
 
-#include <QGraphicsView>
 #include <QMenu>
-#include <QMouseEvent>
 
 #include "gui-variables-widget.h"
 #include "GUI/gui-graph.h"

@@ -30,14 +30,11 @@ struct GUIContext {
 
 class GUIGraph {
 public:
-	GUIGraph() = delete;
-	GUIGraph(const GUIGraph&) = delete;
-	GUIGraph(GUIGraph&&) = delete;
-	~GUIGraph();
 
 	GUIGraph(OBSBlueprintGraph* attachedGraph);
+	~GUIGraph();
 
-	void show();
+	void show() const;
 
 private:
 

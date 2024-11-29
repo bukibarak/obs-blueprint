@@ -6,7 +6,7 @@
 #include "obs-graphics-pin-input-field.h"
 #include "Core/obs-blueprint-node.h"
 
-OBSGraphicsNode::OBSGraphicsNode(OBSBlueprintNode *node, QGraphicsItem *parent) : QGraphicsObject(parent), node(node)
+OBSGraphicsNode::OBSGraphicsNode(GUIContext& context, OBSBlueprintNode *node, QGraphicsItem *parent) : QGraphicsObject(parent), node(node)
 {
 	nodeNameFont.setPixelSize(40);
 	nodeNameFont.setBold(true);
@@ -27,7 +27,7 @@ OBSGraphicsNode::OBSGraphicsNode(OBSBlueprintNode *node, QGraphicsItem *parent) 
 			OBSGraphicsPin* guiPin = new OBSGraphicsPin(pin, this);
 			guiPin->setPos(0, leftPinPlaced * GUI_PIN_SIZE * 2);
 			nodePins.push_back(guiPin);
-			OBSGraphicsPinInputField* widget = node->getGraphicsOptions().isCompactNode ? nullptr : new OBSGraphicsPinInputField(guiPin, this);
+			OBSGraphicsPinInputField* widget = node->getGraphicsOptions().isCompactNode ? nullptr : new OBSGraphicsPinInputField(context, guiPin, this);
 			leftMap[guiPin] = widget;
 			++leftPinPlaced;
 		}
@@ -46,16 +46,16 @@ OBSGraphicsNode::OBSGraphicsNode(OBSBlueprintNode *node, QGraphicsItem *parent) 
 	}
 
 
-	for(int i=0; i < topBlueprintPins.size(); i++) {
+	for(size_t i=0; i < topBlueprintPins.size(); i++) {
 		OBSGraphicsPin* guiPin = new OBSGraphicsPin(topBlueprintPins[i], this);
-		guiPin->setPos(i * GUI_PIN_SIZE * 2, 0);
+		guiPin->setPos(i * GUI_PIN_SIZE * 2.0, 0);
 		nodePins.push_back(guiPin);
 		topPins.push_back(guiPin);
 	}
 
-	for(int i=0; i < bottomBlueprintPins.size(); i++) {
+	for(size_t i=0; i < bottomBlueprintPins.size(); i++) {
 		OBSGraphicsPin* guiPin = new OBSGraphicsPin(bottomBlueprintPins[i], this);
-		guiPin->setPos(i * GUI_PIN_SIZE * 2, 0);
+		guiPin->setPos(i * GUI_PIN_SIZE * 2.0, 0);
 		nodePins.push_back(guiPin);
 		bottomPins.push_back(guiPin);
 	}
@@ -187,7 +187,7 @@ QList<OBSGraphicsConnector *> OBSGraphicsNode::GUIOnly_getConnectors() const
 {
 	QList<OBSGraphicsConnector*> list;
 	for(OBSGraphicsPin* pin: nodePins) {
-		if(pin->isConnected()) {
+		if(pin->getBlueprintPin()->isConnected()) {
 			list.append(pin->getConnectors());
 		}
 	}
@@ -248,8 +248,8 @@ void OBSGraphicsNode::calculateContentRect()
 
 			qreal rightWidth = 0;
 			if(rowsPerformed < rightPins.size()) {
-				OBSGraphicsPin* pin = rightPins[rowsPerformed];
-				QSizeF rightPinTextSize = fm.size(Qt::TextSingleLine, pin->getBlueprintPin()->getDisplayName()) + pinNamePadding + pinNameMargin;
+				OBSGraphicsPin* rowPin = rightPins[rowsPerformed];
+				QSizeF rightPinTextSize = fm.size(Qt::TextSingleLine, rowPin->getBlueprintPin()->getDisplayName()) + pinNamePadding + pinNameMargin;
 				rightWidth = rightPinTextSize.width();
 			}
 			size.setWidth(qMax(size.width(), leftWidth + rightWidth));

@@ -14,7 +14,8 @@ class QLineEdit;
 
 class OBSGraphicsTypeField : public QWidget {
 public:
-	OBSGraphicsTypeField(const PinType& pinType, QWidget* parent = nullptr, const QString& value = "");
+	OBSGraphicsTypeField(const PinType& pinType, QWidget* parent = nullptr, const QString& value = "", bool withLayout = true);
+	~OBSGraphicsTypeField() override;
 
 	void setValue(const QString& value);
 	const QString& getValue();
@@ -22,6 +23,7 @@ public:
 	multicastDelegate_OneParam<QString> onValueChanged;
 
 private:
+	QMetaObject::Connection connection;
 	PinType type;
 	QLineEdit* lineField = nullptr;
 	QCheckBox* checkField = nullptr;
