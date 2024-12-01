@@ -21,7 +21,7 @@ private:
 
 	GUIContext& ctx;
 	OBSBlueprintPin* pin = nullptr;
-	OBSGraphicsTypeField* value = nullptr;
+	OBSGraphicsTypeField* field = nullptr;
 	bool readOnly;
 	bool graphDeleted = false;
 	QLabel* connectionLabel = nullptr;
@@ -30,17 +30,21 @@ private:
 		connectionLabel->setPixmap(pin->isConnected() ? PinColors::ConnectedIcon() : PinColors::DisconnectedIcon());
 		connectionLabel->update();
 
-		if(!readOnly && mutex.try_lock()) {
-			value->setEnabled(!pin->isConnected());
+		if(!graphDeleted && !readOnly && mutex.try_lock()) {
+			field->setEnabled(!pin->isConnected());
 			mutex.unlock();
 		}
 	};
 
 	std::function<void()> pinValueChanged = [this] {
-		if(value && mutex.try_lock()) {
-			value->setValue(TypeConverter::AsString(pin).c_str());
+		if(field && mutex.try_lock()) {
+			field->setValue(TypeConverter::AsString(pin).c_str());
 			mutex.unlock();
 		}
+	};
+
+	std::function<void(QString)> fieldValueChanged = [this](const QString& newVal) {
+		TypeConverter::FromString(pin, newVal.toStdString());
 	};
 
 	std::function<void()> onGraphDeleted = [this] {graphDeleted = true;};

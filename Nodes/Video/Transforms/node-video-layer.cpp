@@ -7,31 +7,26 @@ NodeVideoLayer::NodeVideoLayer() : OBSBlueprintNode(obs_module_text("NodeVideoLa
 	background = createInputPin(VIDEO_PIN, video_frame(), "bg");
 
 	result = createOutputPin(VIDEO_PIN, video_frame(), "result");
-	resultFrame = result->getValuePtr<video_frame>();
 }
 
 void NodeVideoLayer::execute(float deltaSeconds)
 {
 	if(!foreground->isConnected() && !background->isConnected()) {
 		// Nothing connected to the node
-		resultFrame->width = 0;
-		resultFrame->height = 0;
-		resultFrame->pixels = nullptr;
+		foreground->setValue(video_frame());
+		background->setValue(video_frame());
+		result->setValue(video_frame());
 	}
 	else if(!background->isConnected()) {
 		// Only foreground connected, will just propagate as is
-		video_frame* foregroundFrame = foreground->getValuePtr<video_frame>();
-		resultFrame->width = foregroundFrame->width;
-		resultFrame->height = foregroundFrame->height;
-		resultFrame->pixels = foregroundFrame->pixels;
+		background->setValue(video_frame());
+		result->setValue(foreground->getValue<video_frame>());
 		haveExecutedThisCycle = true;
 	}
 	else if(!foreground->isConnected()) {
 		// Only background connected, will just propagate as is
-		video_frame* backgroundFrame = background->getValuePtr<video_frame>();
-		resultFrame->width = backgroundFrame->width;
-		resultFrame->height = backgroundFrame->height;
-		resultFrame->pixels = backgroundFrame->pixels;
+		foreground->setValue(video_frame());
+		result->setValue(background->getValue<video_frame>());
 		haveExecutedThisCycle = true;
 	}
 	else {
@@ -101,9 +96,7 @@ void NodeVideoLayer::execute(float deltaSeconds)
 			}
 		}
 
-		resultFrame->width = maxWidth;
-		resultFrame->height = maxHeight;
-		resultFrame->pixels = resultData;
+		result->setValue(video_frame(maxWidth, maxHeight, resultData));
 		haveExecutedThisCycle = true;
 	}
 }

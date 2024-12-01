@@ -17,6 +17,5 @@ private:
 	OBSBlueprintInputPin* foreground;
 	OBSBlueprintInputPin* background;
 	OBSBlueprintOutputPin* result;
-	video_frame* resultFrame;
 	pixel* resultData = nullptr;
 };

@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <QGraphicsProxyWidget>
+#include <QMutex>
 
 #include "obs-graphics-type-field.h"
 #include "Helpers/pin-helper.h"
@@ -14,11 +15,14 @@ public:
 	int type() const override {return Type;}
 
 private:
+
+	QMutex mutex;
+
 	bool graphDeleted = false;
 	GUIContext& ctx;
-	OBSGraphicsPin* pin;
-	OBSBlueprintPin* bpPin;
-	OBSGraphicsTypeField* typeField;
+	OBSGraphicsPin* pin = nullptr;
+	OBSBlueprintPin* bpPin = nullptr;
+	OBSGraphicsTypeField* field = nullptr;
 
 	std::function<void()> onGraphDeleted = [this]{graphDeleted = true;};
 
@@ -27,12 +31,20 @@ private:
 			if (pin->getBlueprintPin()->isConnected()) {
 				hide();
 
-			} else {
-				typeField->setValue(TypeConverter::AsString(pin->getBlueprintPin()).c_str());
+			} else if(field && mutex.try_lock()) {
+				field->setValue(TypeConverter::AsString(pin->getBlueprintPin()).c_str());
 				show();
+				mutex.unlock();
 			}
 		}
 	};
 
-	std::function<void(QString)> valueChangedCallback = [this](const QString& value) {TypeConverter::FromString(pin->getBlueprintPin(), value.toStdString());};
+	std::function<void()> pinValueChanged = [this] {
+		if(field && mutex.try_lock()) {
+			field->setValue(TypeConverter::AsString(pin->getBlueprintPin()).c_str());
+			mutex.unlock();
+		}
+	};
+
+	std::function<void(QString)> fieldValueChanged = [this](const QString& value) {TypeConverter::FromString(pin->getBlueprintPin(), value.toStdString());};
 };

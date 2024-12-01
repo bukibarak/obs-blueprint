@@ -22,16 +22,17 @@ OBSGraphicsPinDetails::OBSGraphicsPinDetails(GUIContext& context, OBSBlueprintPi
 	QLabel* nameLabel = new QLabel(pin->getDisplayName(), this);
 	layout->addWidget(nameLabel);
 
-	value = new OBSGraphicsTypeField(pin->getPinType(), this, TypeConverter::AsString(pin).c_str());
-	value->setFixedWidth(value->width());
+	field = new OBSGraphicsTypeField(pin->getPinType(), this, TypeConverter::AsString(pin).c_str());
+	field->setFixedWidth(field->width());
 	if(forceReadOnly || pin->isConnected()) {
-		value->setEnabled(false);
+		field->setEnabled(false);
 	}
-	layout->addWidget(value);
+	layout->addWidget(field);
 	layout->addStretch();
 
 	pin->onConnectionChanged += pinConnectionStateChanged;
 	pin->onValueChanged += pinValueChanged;
+	field->onValueChanged += fieldValueChanged;
 }
 
 OBSGraphicsPinDetails::~OBSGraphicsPinDetails()
@@ -42,4 +43,5 @@ OBSGraphicsPinDetails::~OBSGraphicsPinDetails()
 		pin->onConnectionChanged -= pinConnectionStateChanged;
 		pin->onValueChanged -= pinValueChanged;
 	}
+	mutex.unlock();
 }

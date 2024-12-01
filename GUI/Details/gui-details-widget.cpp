@@ -46,12 +46,12 @@ void GUIDetailsWidget::selectionChanged()
 {
 	if(variableDetails != nullptr) {
 		layout->removeWidget(variableDetails);
-		delete variableDetails;
+		variableDetails->deleteLater();
 		variableDetails = nullptr;
 	}
 	if(nodeDetails != nullptr) {
 		layout->removeWidget(nodeDetails);
-		delete nodeDetails;
+		nodeDetails->deleteLater();
 		nodeDetails = nullptr;
 	}
 
