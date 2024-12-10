@@ -80,6 +80,7 @@ OBSGraphicsTypeField::OBSGraphicsTypeField(const PinType &pinType,
 	}
 
 	if(lineField != nullptr) {
+		lineField->setMinimumWidth(100);
 		connection = connect(lineField, &QLineEdit::editingFinished, [this] {
 			onValueChanged.execute(lineField->text());
 		});

@@ -2,9 +2,8 @@
 
 #include <iomanip>
 #include <QPainter>
-#include <sstream>
 
-#include "Structs/video-frame.h"
+#include "Structs/obs-frame.h"
 
 std::string TypeConverter::AsString(OBSBlueprintPin *pin)
 {
@@ -36,8 +35,8 @@ std::string TypeConverter::AsString(OBSBlueprintPin *pin)
 
 	case VIDEO_PIN: {
 		std::stringstream ss;
-		video_frame* frame = pin->getValuePtr<video_frame>();
-		ss << frame->width << "x" << frame->height;
+		OBSFrame* frame = pin->getValuePtr<OBSFrame>();
+		ss << frame->width() << "x" << frame->height();
 		return ss.str();
 	}
 	case AUDIOVIDEO_PIN:
@@ -51,27 +50,34 @@ std::string TypeConverter::AsString(OBSBlueprintPin *pin)
 
 std::string TypeConverter::AsString(OBSBlueprintVariable *variable)
 {
-	std::stringstream ss;
+
 	switch (variable->getPinType()) {
-	case VIDEO_PIN:
-		ss << variable->getValue<video_frame>().width << "x" << variable->getValue<video_frame>().height;
+	case VIDEO_PIN: {
+		std::stringstream ss;
+		OBSFrame* frame = variable->getValuePtr<OBSFrame>();
+		ss << frame->width() << "x" << frame->height();
 		return ss.str();
+	}
 	case BOOLEAN_PIN:
 		return std::to_string(variable->getValue<bool>());
 	case BYTE_PIN:
 		return std::to_string(variable->getValue<uint8_t>());
 	case INT_PIN:
 		return std::to_string(variable->getValue<int32_t>());
-	case FLOAT_PIN:
+	case FLOAT_PIN: {
+		std::stringstream ss;
 		ss << std::setprecision(8) << std::noshowpoint << variable->getValue<float>();
 		return ss.str();
+	}
 	case CHAR_PIN:
 		return {1, variable->getValue<char>()};
 	case STRING_PIN:
 		return variable->getValue<std::string>();
-	case COLOR_PIN:
+	case COLOR_PIN: {
+		std::stringstream ss;
 		ss << std::hex << std::uppercase << variable->getValue<uint32_t>();
 		return ss.str();
+	}
 	default:
 		return "";
 	}

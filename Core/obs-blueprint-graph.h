@@ -4,6 +4,7 @@
 
 
 #include "Structs/multicast-delegate.h"
+#include "Structs/obs-frame.h"
 
 class OBSBlueprintVariable;
 struct pixel;
@@ -119,5 +120,7 @@ private:
 	std::list<OBSBlueprintVariable*> graphVariables;
 
 	OBSBlueprintInputPin* mainVideoInput = nullptr;
+
+	cv::Mat frameCpuMatData;
 };
 

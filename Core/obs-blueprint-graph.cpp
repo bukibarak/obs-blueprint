@@ -10,14 +10,14 @@
 #include "Nodes/node-temp-test.h"
 #include "Nodes/Numbers/Float/node-float-abs.h"
 #include "Nodes/Video/node-image-souce.h"
-#include "Structs/video-frame.h"
+#include "Structs/obs-frame.h"
 
 extern "C" {
 	OBSBlueprintGraph::OBSBlueprintGraph()
 	{
 		blog(LOG_DEBUG, "\n");
 		GDebug("======== Begin graph creation ========");
-		mainVideoInput = OBSBlueprintInputPin::CreateAndInitialize(VIDEO_PIN, this, video_frame(), "Main Video");
+		mainVideoInput = OBSBlueprintInputPin::CreateAndInitialize(VIDEO_PIN, this, OBSFrame(), "Main Video");
 
 		NodeSinusTime* sinusTimeNode = new NodeSinusTime(2.0f, 800.0f);
 		addNode(sinusTimeNode);
@@ -28,13 +28,13 @@ extern "C" {
 		NodeFloatToInt* floatToIntNode = new NodeFloatToInt();
 		addNode(floatToIntNode);
 
-		NodeColorSource* colorSourceNode = new NodeColorSource(1920, 1080,0x800000FF);
+		NodeColorSource* colorSourceNode = new NodeColorSource(1920, 1080,0x80FF0000);
 		addNode(colorSourceNode);
 
 		NodeImageSource* imageSourceNode = new NodeImageSource("C:/temp/p.gif");
 		addNode(imageSourceNode);
 
-		createConnector(imageSourceNode->getOutputPins()[0], mainVideoInput);
+		createConnector(colorSourceNode->getOutputPins()[0], mainVideoInput);
 
 		OBSBlueprintVariable* v1 = OBSBlueprintVariable::CreateVariable<float>(FLOAT_PIN, "My float variable");
 		v1->setValue(100.0f);
@@ -43,7 +43,7 @@ extern "C" {
 		OBSBlueprintVariable* v2 = OBSBlueprintVariable::CreateVariable<bool>(BOOLEAN_PIN, "My bool variable");
 		addVariable(v2);
 
-		OBSBlueprintVariable* v3 = OBSBlueprintVariable::CreateVariable<video_frame>(VIDEO_PIN, "My video variable");
+		OBSBlueprintVariable* v3 = OBSBlueprintVariable::CreateVariable<OBSFrame>(VIDEO_PIN, "My video variable");
 		addVariable(v3);
 
 		GDebug("=========== Graph created! ===========\n\n");
@@ -103,30 +103,38 @@ extern "C" {
 
 				// Propagate data to main video input pin
 				mainVideoInput->getConnector()->propagateData();
+
+				// Update frame cpu matrix
+				frameCpuMatData = mainVideoInput->getValuePtr<OBSFrame>()->toMat();
 			}
+		}
+		else {
+			frameCpuMatData = OBSFrame::EmptyFrame;
 		}
 
 		onGraphEndTick.execute();
+
+
 		mutex().unlock();
 		// GInfo("Graph main video is %ux%u", mainVideoInput->getValuePtr<video_frame>()->width, mainVideoInput->getValuePtr<video_frame>()->height);
 	}
 
 	pixel * OBSBlueprintGraph::getRenderPixels() const
 	{
-		video_frame* frame = mainVideoInput->getValuePtr<video_frame>();
-		pixel* pixels = frame->pixels;
-		if(pixels == nullptr && (frame->width > 0 || frame->height > 0)) GError("No frame found in graph main video pin! OBS will probably crash...");
+		pixel* pixels = reinterpret_cast<pixel*>(frameCpuMatData.data);
+
+		if(pixels == nullptr && (frameCpuMatData.cols > 0 || frameCpuMatData.rows > 0)) GError("No frame found in graph main video pin! OBS will probably crash...");
 		return pixels;
 	}
 
 	uint32_t OBSBlueprintGraph::getWidth() const
 	{
-		return mainVideoInput->getValuePtr<video_frame>()->width;
+		return frameCpuMatData.cols;
 	}
 
 	uint32_t OBSBlueprintGraph::getHeight() const
 	{
-		return mainVideoInput->getValuePtr<video_frame>()->height;
+		return frameCpuMatData.rows;
 	}
 }
 
@@ -203,7 +211,7 @@ void OBSBlueprintGraph::deleteConnector(OBSBlueprintConnector *connector)
 		return;
 	}
 
-	if(connector->getToPin() == mainVideoInput) mainVideoInput->setValue(video_frame());
+	if(connector->getToPin() == mainVideoInput) mainVideoInput->setValue(OBSFrame());
 
 	mutex().lock();
 	graphConnectors.remove(connector);

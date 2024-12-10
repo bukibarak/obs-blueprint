@@ -1,7 +1,6 @@
 ﻿#include "node-color-source.h"
 
-#include "Helpers/pin-helper.h"
-#include "Structs/video-frame.h"
+#include "Structs/obs-frame.h"
 
 NodeColorSource::NodeColorSource() : OBSBlueprintNode(obs_module_text("NodeColorSource"))
 {
@@ -9,7 +8,7 @@ NodeColorSource::NodeColorSource() : OBSBlueprintNode(obs_module_text("NodeColor
 	pinHeight = createInputPin(INT_PIN, int32_t(), "height");
 	pinColor = createInputPin(COLOR_PIN, uint32_t(), "color");
 
-	pinVideo = createOutputPin(VIDEO_PIN, video_frame(), "video");
+	pinVideo = createOutputPin(VIDEO_PIN, OBSFrame(), "video");
 }
 
 NodeColorSource::NodeColorSource(const int32_t& defaultWidth, const int32_t& defaultHeight,
@@ -20,43 +19,31 @@ NodeColorSource::NodeColorSource(const int32_t& defaultWidth, const int32_t& def
 	pinColor->setValue(defaultColor);
 }
 
-NodeColorSource::~NodeColorSource()
-{
-	delete[] pixels;
-}
-
 void NodeColorSource::execute(float deltaSeconds)
 {
 	const int32_t& pinWValue = pinWidth->getValue<int32_t>();
 	const int32_t& pinHValue = pinHeight->getValue<int32_t>();
 	const uint32_t& pinCValue = pinColor->getValue<uint32_t>();
 
-	if(pinWValue != width || pinHValue != height || pinCValue != color) {
-		delete[] pixels;
-		pixels = nullptr;
+	const OBSFrame& frame = pinVideo->getValue<OBSFrame>();
+
+	if (pinWValue != frame.width() || pinHValue != frame.height() || pinCValue != color) {
+		// Size of the frame matrix image have changed, recreate
+		int32_t newWidth, newHeight;
 		color = pinCValue;
 
-		if(pinWValue < 0 || pinHValue < 0) {
+		if (pinWValue < 0 || pinHValue < 0) {
 			GError("Color source cannot have a negative width or height! Will not output anything...");
-			width = 0;
-			height = 0;
+			newWidth = 0;
+			newHeight = 0;
 		}
 		else {
-			// TODO OPTIMIZE TO NOT RECREATE FULL PIXEL ARRAY ON EACH TICK!
-			width = pinWValue;
-			height = pinHValue;
-
-			pixels = new pixel[width * height];
-
-			pixel defaultPixel = pixel::ColorToPixel(color);
-
-			for(int32_t i = 0; i < width * height; i++) {
-				pixels[i] = defaultPixel;
-			}
+			newWidth = pinWValue;
+			newHeight = pinHValue;
 		}
 
-		pinVideo->setValue(video_frame(width, height, pixels));
-
+		pixel p = pixel::ColorToPixel(color);
+		pinVideo->setValue(OBSFrame({newHeight, newWidth, CV_8UC4, cv::Scalar(p.b, p.g, p.r, p.a)}));
 		haveExecutedThisCycle = true;
 	}
 }

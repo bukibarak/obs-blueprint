@@ -1,7 +1,7 @@
 ﻿#include "node-variable-get.h"
 
 #include "Core/obs-blueprint-variable.h"
-#include "Structs/video-frame.h"
+#include "Structs/obs-frame.h"
 
 NodeVariableGet::NodeVariableGet(OBSBlueprintVariable *linkedVariable)
 	: OBSBlueprintNode("GET " + std::string(linkedVariable->getDisplayName())), variable(linkedVariable)
@@ -11,7 +11,7 @@ NodeVariableGet::NodeVariableGet(OBSBlueprintVariable *linkedVariable)
 
 	switch(variable->getPinType()) {
 	case VIDEO_PIN:
-		pin = createOutputPin(VIDEO_PIN, video_frame(), "video");
+		pin = createOutputPin(VIDEO_PIN, OBSFrame(), "video");
 		break;
 	case BOOLEAN_PIN:
 		pin = createOutputPin(BOOLEAN_PIN, bool(), "bool");
@@ -55,7 +55,7 @@ void NodeVariableGet::execute(float deltaSeconds)
 	else {
 		switch(variable->getPinType()) {
 		case VIDEO_PIN:
-			pin->setValue(variable->getValue<video_frame>());
+			pin->setValue(variable->getValue<OBSFrame>());
 			break;
 		case BOOLEAN_PIN:
 			pin->setValue(variable->getValue<bool>());

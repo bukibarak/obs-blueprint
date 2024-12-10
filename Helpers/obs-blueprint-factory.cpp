@@ -1,7 +1,7 @@
 ﻿#include "obs-blueprint-factory.h"
 
 #include "Core/obs-blueprint-variable.h"
-#include "Structs/video-frame.h"
+#include "Structs/obs-frame.h"
 
 OBSBlueprintVariable * OBSBlueprintFactory::CreateAudioVideoVariable(const char* name)
 {
@@ -15,7 +15,7 @@ OBSBlueprintVariable * OBSBlueprintFactory::CreateAudioVariable(const char* name
 
 OBSBlueprintVariable * OBSBlueprintFactory::CreateVideoVariable(const char* name)
 {
-	return OBSBlueprintVariable::CreateVariable<video_frame>(VIDEO_PIN, name);
+	return OBSBlueprintVariable::CreateVariable<OBSFrame>(VIDEO_PIN, name);
 }
 
 OBSBlueprintVariable * OBSBlueprintFactory::CreateBooleanVariable(const char* name)

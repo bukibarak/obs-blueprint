@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <functional>
 #include <list>
+#include <mutex>
 
 /**
  * Multicast delegate base class. Should not be used directly!
@@ -23,7 +24,9 @@ public:
 	void bind(T& function) { this += function; }
 	void operator+=(T& function)
 	{
+		mut.lock();
 		callbacks.push_back(&function);
+		mut.unlock();
 	}
 
 	/**
@@ -33,7 +36,9 @@ public:
 	void unbind(T& function) { this -= function; }
 	void operator-=(T& function)
 	{
+		mut.lock();
 		callbacks.remove(&function);
+		mut.unlock();
 	}
 
 	/**
@@ -41,11 +46,13 @@ public:
 	 */
 	void clearAllCallbacks()
 	{
+		mut.lock();
 		callbacks.clear();
+		mut.unlock();
 	}
 
 protected:
-
+	std::mutex mut;
 	std::list<T*> callbacks;
 };
 
@@ -55,8 +62,10 @@ struct multicastDelegate_ZeroParam : public multicastDelegate<std::function<void
 	 */
 	void execute()
 	{
+		this->mut.lock();
 		for(auto* callback : this->callbacks)
 			callback->operator()();
+		this->mut.unlock();
 	}
 };
 
@@ -67,8 +76,10 @@ struct multicastDelegate_OneParam : public multicastDelegate<std::function<void(
 	 */
 	void execute(const A& firstParam)
 	{
+		this->mut.lock();
 		for(auto* callback : this->callbacks)
 			callback->operator()(firstParam);
+		this->mut.unlock();
 	}
 };
 
@@ -79,8 +90,10 @@ struct multicastDelegate_TwoParams : public multicastDelegate<std::function<void
 	 */
 	void execute(const A& firstParam, const B& secondParam)
 	{
+		this->mut.lock();
 		for(auto* callback : this->callbacks)
 			callback->operator()(firstParam, secondParam);
+		this->mut.unlock();
 	}
 };
 
@@ -91,8 +104,10 @@ struct multicastDelegate_ThreeParams : public multicastDelegate<std::function<vo
 	 */
 	void execute(const A& firstParam, const B& secondParam, const C& thirdParam)
 	{
+		this->mut.lock();
 		for(auto* callback : this->callbacks)
 			callback->operator()(firstParam, secondParam, thirdParam);
+		this->mut.unlock();
 	}
 };
 
@@ -103,8 +118,10 @@ struct multicastDelegate_FourParams : public multicastDelegate<std::function<voi
 	 */
 	void execute(const A& firstParam, const B& secondParam, const C& thirdParam, const D& fourthParam)
 	{
+		this->mut.lock();
 		for(auto* callback : this->callbacks)
 			callback->operator()(firstParam, secondParam, thirdParam, fourthParam);
+		this->mut.unlock();
 	}
 };
 
@@ -115,7 +132,9 @@ struct multicastDelegate_fiveParams : public multicastDelegate<std::function<voi
 	 */
 	void execute(const A& firstParam, const B& secondParam, const C& thirdParam, const D& fourthParam, const E& fifthParam)
 	{
+		this->mut.lock();
 		for(auto* callback : this->callbacks)
 			callback->operator()(firstParam, secondParam, thirdParam, fourthParam, fifthParam);
+		this->mut.unlock();
 	}
 };

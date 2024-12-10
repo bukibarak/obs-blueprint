@@ -11,7 +11,7 @@ OBSGraphicsPinInputField::OBSGraphicsPinInputField(GUIContext& context,
 
 	field = new OBSGraphicsTypeField(bpPin->getPinType(), nullptr, TypeConverter::AsString(pin->getBlueprintPin()).c_str(), false);
 	setScale(1.3);
-	field->setMaximumWidth(80);
+	//field->setMaximumWidth(80);
 	// typeField->setAlignment(Qt::AlignRight);
 
 

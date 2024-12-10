@@ -4,9 +4,10 @@
 
 #include "obs-blueprint-node.h"
 #include "obs-blueprint-pin.h"
+#include "Structs/obs-frame.h"
 
 OBSBlueprintConnector::OBSBlueprintConnector(OBSBlueprintOutputPin *from,
-	OBSBlueprintInputPin *to) : fromPin(from), toPin(to)
+                                             OBSBlueprintInputPin *to) : fromPin(from), toPin(to)
 {
 	if(toPin->connector != nullptr) throw std::invalid_argument("Input pin is already connected");
 	if(fromPin->pinType != toPin->pinType) throw std::invalid_argument("Pins are not of same type");
@@ -46,7 +47,11 @@ void OBSBlueprintConnector::propagateData() const
 	}
 	if(fromPin->getPinType() == STRING_PIN) {
 		toPin->setValue(fromPin->getValue<std::string>()); // TODO cannot memcpy std::string!!! --> use const char* instead??
-	} else {
+	}
+	else if (fromPin->getPinType() == VIDEO_PIN) {
+		toPin->setValue(fromPin->getValue<OBSFrame>());
+	}
+	else {
 		memcpy(toPin->rawValuePtr, fromPin->rawValuePtr, size);
 		toPin->onValueChanged.execute();
 	}

@@ -55,7 +55,7 @@ static void obs_blueprint_source_render(void* data, gs_effect_t* effect)
 	if(width != 0 && height != 0 && pixels != NULL) {
 		const uint8_t* obs_blueprint_graph_data = (const uint8_t*)pixels;
 		obs_enter_graphics();
-		gs_texture_t* texture = gs_texture_create(width, height, GS_RGBA, 1, &obs_blueprint_graph_data, 0);
+		gs_texture_t* texture = gs_texture_create(width, height, GS_BGRA, 1, &obs_blueprint_graph_data, 0);
 		obs_leave_graphics();
 
 		const bool previous = gs_framebuffer_srgb_enabled();

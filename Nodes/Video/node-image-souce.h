@@ -1,7 +1,8 @@
 ﻿#pragma once
 #include "Core/obs-blueprint-node.h"
 #include "graphics/image-file.h"
-#include "Structs/pixel.h"
+#include "Structs/obs-frame.h"
+
 
 class NodeImageSource : public OBSBlueprintNode {
 public:
@@ -18,21 +19,17 @@ public:
 private:
 	OBSBlueprintInputPin* pathPin;
 	OBSBlueprintOutputPin* videoPin;
-	video_frame* video;
 
 	float checkModifiedCounter = 0.0f;
 	std::string filePath{};
 	time_t fileModifiedTime = -1;
 	gs_image_file_t image{};
-	pixel* imageData = nullptr;
 	uint64_t lastTime = 0;
 
 	volatile bool loaded;
 
 	void unload();
 	void load();
-	void update(bool updateTick = false);
-	bool convert(bool updateTick);
 
 	time_t getFileModifiedTime() const;
 
