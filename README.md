@@ -14,10 +14,10 @@ It's distributed under the GNU General Public License v2 (or any later version) 
 ### Prerequisites
 
 * OpenCV built libraries (tested with 4.10.0): https://docs.opencv.org/4.x/df/d65/tutorial_table_of_content_introduction.html 
-    > [!IMPORTANT]
-    > If you want to build OBS Blueprint with CUDA (GPU), you must include OpenCV CUDA modules when building the libraries.
-    * The OpenCV module *highgui* is not used in OBS Blueprint and can be safely removed. I believe there are some other unused modules that are unused and could be disabled.
-
+ * The OpenCV module *highgui* is not used in OBS Blueprint and can be safely removed. I believe there are some other unused modules that are unused and could be disabled.
+> [!IMPORTANT]
+> If you want to build OBS Blueprint with CUDA (GPU), you must include OpenCV CUDA modules when building the libraries.
+   
 * OBS Studio project: https://github.com/obsproject/obs-studio/ 
     * You can follow https://github.com/obsproject/obs-studio/wiki/build-instructions-for-windows instructions.
 

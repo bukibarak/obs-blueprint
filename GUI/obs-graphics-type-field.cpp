@@ -13,7 +13,6 @@
 OBSGraphicsTypeField::OBSGraphicsTypeField(const PinType &pinType,
 	QWidget *parent, const QString& value, bool withLayout) : QWidget(parent), type(pinType)
 {
-	// qDebug() << ">>>> BEGIN OBSGraphicsTypeField Constructor";
 	switch (pinType) {
 	case VIDEO_PIN:
 		labelField = new QLabel(this);
@@ -57,7 +56,6 @@ OBSGraphicsTypeField::OBSGraphicsTypeField(const PinType &pinType,
 	default:
 		labelField = new QLabel("???", this);
 	}
-	// qDebug() << ">>>> ASSIGNED OBSGraphicsTypeField Constructor";
 
 	if(withLayout) {
 		QLayout* layout = new QHBoxLayout(this);
@@ -85,11 +83,9 @@ OBSGraphicsTypeField::OBSGraphicsTypeField(const PinType &pinType,
 			onValueChanged.execute(lineField->text());
 		});
 	}
-	// qDebug() << ">>>> CONNECTED OBSGraphicsTypeField Constructor";
 
 	if(!value.isEmpty())
 		setValue(value);
-	// qDebug() << ">>>> END OBSGraphicsTypeField Constructor";
 }
 
 OBSGraphicsTypeField::~OBSGraphicsTypeField()

@@ -35,8 +35,8 @@ Then, click the **[Modify]** button at the bottom right of the window and wait f
     * *If you have installed VS Community 2022:*
         * `C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin`
         * `C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja`
-    > [!NOTE]
-    > If you have installed Visual Studio on a custom location, you must change the beginning of the paths according to your install location.
+> [!NOTE]
+> If you have installed Visual Studio on a custom location, you must change the beginning of the paths according to your install location.
 
 ![env-variable-path](./images/env-variable-path.png)
 
@@ -142,8 +142,8 @@ popd
 > If you don't use Visual Studio 2022 x64, you need to change the line with `CMAKE_GENERATOR_OPTIONS` and set it to your architecture. If you don't need to build Debug libraries, comment the script lines 29, 30 and 34.
 
 6. Inside Git Bash, type `./install.sh` and press enter. **THIS WILL TAKE LIKE FOREVER, DO NOT PANIK** (with CUDA and both Debug and Release libraries it can take more than 2 hours)
-    > [!IMPORTANT]
-    > If you try to build OpenCV with GPU (CUDA), make sure to verify that OpenCV CUDA modules will be built on the OpenCV General configuration (see image below). If not (the CUDA modules are listed as *Unavailable*), abort the operation with Ctrl+C and make sure that both Git Bash and CMake can find nvcc. Sometimes, adding a new environment variable (not in the PATH) named `CUDA_PATH` with the path of cuda as a value `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6` can solve this problem. You may need to add other environment variables, such as `CUDNN_INCLUDE_DIR` and `CUDNN_LIBRARY`. [Detailled tutorial](https://medium.com/@batuhanhangun/opencv454-gpu-support-cpp-bef2cc145090)
+> [!IMPORTANT]
+> If you try to build OpenCV with GPU (CUDA), make sure to verify that OpenCV CUDA modules will be built on the OpenCV General configuration (see image below). If not (the CUDA modules are listed as *Unavailable*), abort the operation with Ctrl+C and make sure that both Git Bash and CMake can find nvcc. Sometimes, adding a new environment variable (not in the PATH) named `CUDA_PATH` with the path of cuda as a value `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6` can solve this problem. You may need to add other environment variables, such as `CUDNN_INCLUDE_DIR` and `CUDNN_LIBRARY`. [Detailled tutorial](https://medium.com/@batuhanhangun/opencv454-gpu-support-cpp-bef2cc145090)
 
 ![opencv-build-config](./images/opencv-config.png)
 

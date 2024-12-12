@@ -324,12 +324,9 @@ void OBSGraphicsScene::removeGUINode(OBSGraphicsNode* node, bool removeFromBluep
 	nodeMap.remove(node->getBlueprintNode());
 	removeItem(node);
 	OBSBlueprintNode* bpNode = node->getBlueprintNode();
-	qDebug() << " ---- BEFORE DELETE GUI NODE ---- ";
 	delete node; // Delete GUI node (will delete GUI pins as well)
-	qDebug() << " ---- AFTER DELETE GUI NODE; BEFORE DELETE GRAPH NODE ---- ";
 	if(removeFromBlueprintGraph)
 		ctx.graph->deleteNode(bpNode); // Delete BP node (will delete blueprint pins as well)
-	qDebug() << " ---- AFTER DELETE GRAPH NODE ---- ";
 }
 
 OBSGraphicsConnector *OBSGraphicsScene::addGUIConnector(
