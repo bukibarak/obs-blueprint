@@ -8,7 +8,7 @@ NodeColorSource::NodeColorSource() : OBSBlueprintNode(obs_module_text("NodeColor
 	pinHeight = createInputPin(INT_PIN, int32_t(), "height");
 	pinColor = createInputPin(COLOR_PIN, uint32_t(), "color");
 
-	pinVideo = createOutputPin(VIDEO_PIN, OBSFrame(), "video");
+	pinVideo = createOutputPin(VIDEO_PIN, OBSFrame::EmptyFrame, "video");
 }
 
 NodeColorSource::NodeColorSource(const int32_t& defaultWidth, const int32_t& defaultHeight,
@@ -45,5 +45,8 @@ void NodeColorSource::execute(float deltaSeconds)
 		pixel p = pixel::ColorToPixel(color);
 		pinVideo->setValue(OBSFrame({newHeight, newWidth, CV_8UC4, cv::Scalar(p.b, p.g, p.r, p.a)}));
 		haveExecutedThisCycle = true;
+	}
+	else {
+		pinVideo->getValuePtr<OBSFrame>()->updated = false;
 	}
 }

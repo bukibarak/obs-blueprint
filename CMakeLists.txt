@@ -32,7 +32,10 @@ target_link_libraries(
 
 # Copy OpenCV dll
 MACRO (COPY_DLL libname)
-    configure_file("${OpenCV_DIR}/x64/vc17/bin/${libname}.dll" "${CMAKE_BINARY_DIR}/rundir/Debug/obs-plugins/64bit/${libname}.dll" COPYONLY)
+    # configure_file("${OpenCV_DIR}/x64/vc17/bin/${libname}.dll" "${CMAKE_BINARY_DIR}/rundir/$<CONFIG>/obs-plugins/64bit/${libname}.dll" COPYONLY)
+    add_custom_command(TARGET obs-blueprint POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${OpenCV_DIR}/x64/vc17/bin/${libname}.dll" "${CMAKE_BINARY_DIR}/rundir/$<CONFIG>/obs-plugins/64bit/${libname}.dll"
+      COMMENT "Copy ${libname}.dll into ${CMAKE_BINARY_DIR}/rundir/$<CONFIG>/obs-plugins/64bit/")
 ENDMACRO (COPY_DLL)
 COPY_DLL(opencv_world4100)
 COPY_DLL(opencv_world4100d)

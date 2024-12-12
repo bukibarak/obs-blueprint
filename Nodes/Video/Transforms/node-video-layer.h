@@ -15,6 +15,8 @@ public:
 
 private:
 	OBSBlueprintInputPin* foreground;
+	bool fgConnected = false;
 	OBSBlueprintInputPin* background;
+	bool bgConnected = false;
 	OBSBlueprintOutputPin* result;
 };

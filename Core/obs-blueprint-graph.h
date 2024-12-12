@@ -105,11 +105,10 @@ public:
 	/** Add callbacks to this delegate if required. It will be called on each \a tick \b after the graph nodes are executed. */
 	multicastDelegate_ZeroParam onGraphEndTick;
 
-	std::mutex& mutex() { return mtx; }
 
 private:
 
-	std::mutex mtx;
+	std::mutex mutex;
 
 	float graphTime = 0.0f;
 
@@ -120,7 +119,8 @@ private:
 	std::list<OBSBlueprintVariable*> graphVariables;
 
 	OBSBlueprintInputPin* mainVideoInput = nullptr;
+	bool inputConnected = false;
 
-	cv::Mat frameCpuMatData;
+	cv::Mat pixelsMat{OBSFrame::EmptyMat};
 };
 

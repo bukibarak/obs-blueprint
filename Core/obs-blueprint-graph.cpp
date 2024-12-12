@@ -17,7 +17,7 @@ extern "C" {
 	{
 		blog(LOG_DEBUG, "\n");
 		GDebug("======== Begin graph creation ========");
-		mainVideoInput = OBSBlueprintInputPin::CreateAndInitialize(VIDEO_PIN, this, OBSFrame(), "Main Video");
+		mainVideoInput = OBSBlueprintInputPin::CreateAndInitialize(VIDEO_PIN, this, OBSFrame::EmptyFrame, "Main Video");
 
 		NodeSinusTime* sinusTimeNode = new NodeSinusTime(2.0f, 800.0f);
 		addNode(sinusTimeNode);
@@ -31,10 +31,10 @@ extern "C" {
 		NodeColorSource* colorSourceNode = new NodeColorSource(1920, 1080,0x80FF0000);
 		addNode(colorSourceNode);
 
-		NodeImageSource* imageSourceNode = new NodeImageSource("C:/temp/p.gif");
+		NodeImageSource* imageSourceNode = new NodeImageSource("C:/temp/q.gif");
 		addNode(imageSourceNode);
 
-		createConnector(colorSourceNode->getOutputPins()[0], mainVideoInput);
+		createConnector(imageSourceNode->getOutputPins()[0], mainVideoInput);
 
 		OBSBlueprintVariable* v1 = OBSBlueprintVariable::CreateVariable<float>(FLOAT_PIN, "My float variable");
 		v1->setValue(100.0f);
@@ -90,7 +90,7 @@ extern "C" {
 	{
 		graphTime += deltaSeconds;
 
-		mutex().lock();
+		mutex.lock();
 		onGraphBeginTick.execute(deltaSeconds);
 
 		// If the main video input pin is connected, use it to call tick() on parent node
@@ -104,55 +104,63 @@ extern "C" {
 				// Propagate data to main video input pin
 				mainVideoInput->getConnector()->propagateData();
 
-				// Update frame cpu matrix
-				frameCpuMatData = mainVideoInput->getValuePtr<OBSFrame>()->toMat();
+				// Update pixels matrix if frame has been updated
+				const OBSFrame& frame = mainVideoInput->getValue<OBSFrame>();
+				if (!inputConnected || frame.updated) {
+					if (frame.mat.data == OBSFrame::EmptyFrame.mat.data)
+						pixelsMat = OBSFrame::EmptyMat;
+					else
+						pixelsMat = frame.cpuMat();
+				}
+				inputConnected = true;
 			}
 		}
 		else {
-			frameCpuMatData = OBSFrame::EmptyFrame;
+			pixelsMat = OBSFrame::EmptyMat;
+			inputConnected = false;
 		}
 
 		onGraphEndTick.execute();
 
 
-		mutex().unlock();
+		mutex.unlock();
 		// GInfo("Graph main video is %ux%u", mainVideoInput->getValuePtr<video_frame>()->width, mainVideoInput->getValuePtr<video_frame>()->height);
 	}
 
 	pixel * OBSBlueprintGraph::getRenderPixels() const
 	{
-		pixel* pixels = reinterpret_cast<pixel*>(frameCpuMatData.data);
+		pixel* pixels = reinterpret_cast<pixel*>(pixelsMat.data);
 
-		if(pixels == nullptr && (frameCpuMatData.cols > 0 || frameCpuMatData.rows > 0)) GError("No frame found in graph main video pin! OBS will probably crash...");
+		if(pixels == nullptr && (pixelsMat.cols > 0 || pixelsMat.rows > 0)) GError("No frame found in graph main video pin! OBS will probably crash...");
 		return pixels;
 	}
 
 	uint32_t OBSBlueprintGraph::getWidth() const
 	{
-		return frameCpuMatData.cols;
+		return pixelsMat.cols;
 	}
 
 	uint32_t OBSBlueprintGraph::getHeight() const
 	{
-		return frameCpuMatData.rows;
+		return pixelsMat.rows;
 	}
 }
 
 void OBSBlueprintGraph::addVariable(OBSBlueprintVariable *variable)
 {
-	mutex().lock();
+	mutex.lock();
 	variable->setupGraph(this);
 	graphVariables.push_back(variable);
-	mutex().unlock();
+	mutex.unlock();
 }
 
 void OBSBlueprintGraph::deleteVariable(OBSBlueprintVariable *variable)
 {
-	mutex().lock();
+	mutex.lock();
 	graphVariables.remove(variable);
 	// TODO DELETE NODES LINKED TO VARIABLES!
 	delete variable;
-	mutex().unlock();
+	mutex.unlock();
 }
 
 bool OBSBlueprintGraph::isVariableUsed(OBSBlueprintVariable *variable)
@@ -193,10 +201,10 @@ OBSBlueprintConnector* OBSBlueprintGraph::createConnector(OBSBlueprintOutputPin 
 		deleteConnector(to->getConnector());
 	}
 
-	mutex().lock();
+	mutex.lock();
 	OBSBlueprintConnector* newConnector = new OBSBlueprintConnector(from, to);
 	graphConnectors.push_back(newConnector);
-	mutex().unlock();
+	mutex.unlock();
 #if DEBUG
 	GInfo("CONNECT [%s] '%s' =======> '%s' [%s]", fromParentName, from->getDisplayName(), to->getDisplayName(), toParentName);
 #endif
@@ -211,29 +219,29 @@ void OBSBlueprintGraph::deleteConnector(OBSBlueprintConnector *connector)
 		return;
 	}
 
-	if(connector->getToPin() == mainVideoInput) mainVideoInput->setValue(OBSFrame());
+	if(connector->getToPin() == mainVideoInput) mainVideoInput->setValue(OBSFrame::EmptyFrame);
 
-	mutex().lock();
+	mutex.lock();
 	graphConnectors.remove(connector);
 	delete connector;
-	mutex().unlock();
+	mutex.unlock();
 }
 
 void OBSBlueprintGraph::addNode(OBSBlueprintNode *node)
 {
-	mutex().lock();
+	mutex.lock();
 	node->setupGraph(this);
 	graphNodes.push_back(node);
-	mutex().unlock();
+	mutex.unlock();
 }
 
 void OBSBlueprintGraph::deleteNode(OBSBlueprintNode *node)
 {
-	mutex().lock();
+	mutex.lock();
 	graphNodes.remove(node);
 	for(OBSBlueprintConnector* connector : node->getAllConnectors()) {
 		deleteConnector(connector);
 	}
 	delete node;
-	mutex().unlock();
+	mutex.unlock();
 }

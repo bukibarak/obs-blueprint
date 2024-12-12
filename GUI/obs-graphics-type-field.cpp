@@ -13,7 +13,7 @@
 OBSGraphicsTypeField::OBSGraphicsTypeField(const PinType &pinType,
 	QWidget *parent, const QString& value, bool withLayout) : QWidget(parent), type(pinType)
 {
-	qDebug() << ">>>> BEGIN OBSGraphicsTypeField Constructor";
+	// qDebug() << ">>>> BEGIN OBSGraphicsTypeField Constructor";
 	switch (pinType) {
 	case VIDEO_PIN:
 		labelField = new QLabel(this);
@@ -24,7 +24,7 @@ OBSGraphicsTypeField::OBSGraphicsTypeField(const PinType &pinType,
 		break;
 	case BOOLEAN_PIN:
 		checkField = new QCheckBox(this);
-		connection = connect(checkField, &QCheckBox::checkStateChanged, [this](const Qt::CheckState& state) {onValueChanged.execute(state == Qt::Checked ? "1" : "0");});
+		connection = connect(checkField, &QCheckBox::stateChanged, [this](const int& state) {onValueChanged.execute(state == Qt::Checked ? "1" : "0");});
 		break;
 	case BYTE_PIN:
 		lineField = new QLineEdit(this);
@@ -57,7 +57,7 @@ OBSGraphicsTypeField::OBSGraphicsTypeField(const PinType &pinType,
 	default:
 		labelField = new QLabel("???", this);
 	}
-	qDebug() << ">>>> ASSIGNED OBSGraphicsTypeField Constructor";
+	// qDebug() << ">>>> ASSIGNED OBSGraphicsTypeField Constructor";
 
 	if(withLayout) {
 		QLayout* layout = new QHBoxLayout(this);
@@ -85,11 +85,11 @@ OBSGraphicsTypeField::OBSGraphicsTypeField(const PinType &pinType,
 			onValueChanged.execute(lineField->text());
 		});
 	}
-	qDebug() << ">>>> CONNECTED OBSGraphicsTypeField Constructor";
+	// qDebug() << ">>>> CONNECTED OBSGraphicsTypeField Constructor";
 
 	if(!value.isEmpty())
 		setValue(value);
-	qDebug() << ">>>> END OBSGraphicsTypeField Constructor";
+	// qDebug() << ">>>> END OBSGraphicsTypeField Constructor";
 }
 
 OBSGraphicsTypeField::~OBSGraphicsTypeField()

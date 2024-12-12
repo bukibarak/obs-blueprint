@@ -8,7 +8,7 @@
 NodeImageSource::NodeImageSource() : OBSBlueprintNode(obs_module_text("NodeImageSource"))
 {
 	pathPin = createInputPin(STRING_PIN, std::string(), "Path");
-	videoPin = createOutputPin(VIDEO_PIN, OBSFrame(), "Video");
+	videoPin = createOutputPin(VIDEO_PIN, OBSFrame::EmptyFrame, "Video");
 
 	// TODO ADD EXECUTION PIN TO RESTART GIF
 }
@@ -46,27 +46,35 @@ void NodeImageSource::execute(float deltaSeconds)
 		}
 	}
 
-	// 3. If image is a gif, tick and update image
-	if(image.is_animated_gif) {
-		uint64_t frame_time = obs_get_video_frame_time();
+	// 3. If image is a gif, update frame if necessary
+	if (imageFrames.size() > 1) {
+		gifFrameSec += deltaSeconds;
+		while (gifFrameSec > gifFrameLimit)
+			gifFrameSec -= gifFrameLimit;
 
-		if(lastTime) {
-			uint64_t elapsed = frame_time - lastTime;
-			bool updated = gs_image_file_tick(&image, elapsed);
-
-			if(updated) {
-				videoPin->setValue(OBSFrame(image.cx, image.cy, image.animation_frame_cache[image.cur_frame], image.format));
-			}
+		float timeIndex = 0.0f;
+		size_t index = -1;
+		while (timeIndex < gifFrameSec) {
+			++index;
+			timeIndex += imageDelayMs[index] / 1000.0f;
 		}
-		lastTime = frame_time;
+
+		if (index != gifCurrIndex) {
+			gifCurrIndex = index;
+			videoPin->setValue(imageFrames[index]);
+			haveExecutedThisCycle = true;
+		}
 	}
+
+	videoPin->getValuePtr<OBSFrame>()->updated = haveExecutedThisCycle;
 }
 
 void NodeImageSource::unload()
 {
 	os_atomic_set_bool(&loaded, false);
-	gs_image_file_free(&image);
-	videoPin->setValue(OBSFrame());
+	videoPin->setValue(OBSFrame::EmptyFrame);
+	imageFrames.clear();
+	imageDelayMs.clear();
 }
 
 
@@ -86,15 +94,38 @@ void NodeImageSource::load()
 		return;
 
 	fileModifiedTime = getFileModifiedTime();
+	gs_image_file_t image;
 	gs_image_file_init(&image, filePath.c_str());
 
 	if (image.is_animated_gif) {
-		videoPin->setValue(OBSFrame(image.cx, image.cy, static_cast<uint8_t*>(image.gif.frame_image), image.format));
+		uint64_t timeNs = 0;
+		for (uint32_t i = 0; i < image.gif.frame_count; i++) {
+			gif_frame& gifFrame = image.gif.frames[i];
+			uint32_t frame_delay = gifFrame.frame_delay == 0 ? 10 : gifFrame.frame_delay;
+			uint64_t frameNs = frame_delay * 10000000ULL;
+			timeNs += frameNs;
+			bool updated = gs_image_file_tick(&image, frameNs + 1);
+			if (updated) {
+				imageFrames.push_back({static_cast<int>(image.cx), static_cast<int>(image.cy), image.animation_frame_cache[image.cur_frame], image.format});
+				frame_delay = image.gif.frames[image.cur_frame].frame_delay == 0 ? 10 : image.gif.frames[image.cur_frame].frame_delay;
+				imageDelayMs.push_back(frame_delay * 10);
+			}
+			else {
+				GError("[NodeImageSource] Couldn't decode gif frame #%i at time %.3fs", i, static_cast<float>(timeNs / 1000000ULL) / 1000.0f);
+			}
+		}
+		gifFrameSec = 0.0f;
+		gifCurrIndex = 0;
+		gifFrameLimit = static_cast<float>(timeNs / 1000000ULL) / 1000.0f;
 	}
 	else {
-		videoPin->setValue(OBSFrame(image.cx, image.cy, image.texture_data, image.format));
+		imageFrames.push_back({static_cast<int>(image.cx), static_cast<int>(image.cy), image.texture_data, image.format});
 	}
 
+	obs_enter_graphics();
+	gs_image_file_free(&image);
+	obs_leave_graphics();
+	videoPin->setValue(imageFrames.empty() ? OBSFrame::EmptyFrame : imageFrames.front());
 	GInfo("[NodeImageSource] image loaded (%s)", filePath.c_str());
 
 	os_atomic_set_bool(&loaded, true);

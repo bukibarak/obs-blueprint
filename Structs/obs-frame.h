@@ -1,22 +1,8 @@
 ﻿#pragma once
 
-
-
-#define CUDA_AVAILABLE 1
-
-
-
 #include "Nodes/Video/node-color-source.h"
 #include "opencv2/core/types_c.h"
-
-#if CUDA_AVAILABLE
-#include <opencv2/cudaimgproc.hpp>
-#include <opencv2/core/cuda.hpp>
-#include <opencv2/cudaarithm.hpp>
-#else
-#include <opencv2/core.hpp>
-#include <opencv2/cudaimgproc.hpp>
-#endif
+#include "opencv-conf.h"
 
 /**
  * Video frame structure, containing the screen pixels matrix.\n
@@ -27,14 +13,18 @@ struct OBSFrame {
 
 	OBSFrame() = default;
 
-	static inline const cv::Mat EmptyFrame{0,0,CV_8UC4, nullptr};
-	cv::Mat toMat() const { if (mat.empty()) return EmptyFrame; return cv::Mat(mat); }
+	bool updated = true;
+	static const cv::Mat EmptyMat;
+	static const OBSFrame EmptyFrame;
+
+	bool empty() const {return mat.empty(); }
 
 #if CUDA_AVAILABLE
+	static const cv::cuda::GpuMat EmptyGpuMat;
+
 	cv::cuda::GpuMat mat;
-	static inline const cv::cuda::GpuMat EmptyFrameGpu{0,0,CV_8UC4, nullptr, CV_AUTO_STEP};
 	OBSFrame(const cv::cuda::GpuMat& mat) : mat(mat) {}
-	OBSFrame(int width, int height, uint8_t* cpuData, gs_color_format format) : mat(EmptyFrameGpu)
+	OBSFrame(int width, int height, uint8_t* cpuData, gs_color_format format) : mat(EmptyGpuMat)
 	{
 		cv::Mat cpuMat(height, width, CV_8UC4, cpuData);
 		mat = cv::cuda::GpuMat(cpuMat);
@@ -46,10 +36,13 @@ struct OBSFrame {
 			GError("Unsupported frame format (%i). Formats supported are RGBA (%i) and BGRA (%i)", format, GS_RGBA, GS_BGRA);
 		}
 	}
+
+	cv::Mat cpuMat() const { return mat.empty() ? EmptyMat : cv::Mat(mat); }
+
 #else
 	cv::Mat mat;
 	OBSFrame(cv::Mat mat) : mat(std::move(mat)) {}
-	OBSFrame(int width, int height, uint8_t* data, gs_color_format format) : mat(EmptyFrame)
+	OBSFrame(int width, int height, uint8_t* data, gs_color_format format) : mat(EmptyMat)
 	{
 		if (format == GS_BGRA || format == GS_RGBA) {
 			mat = cv::Mat(height, width, CV_8UC4, data).clone();
@@ -61,6 +54,8 @@ struct OBSFrame {
 			GError("Unsupported frame format (%i). Formats supported are RGBA (%i) and BGRA (%i)", format, GS_RGBA, GS_BGRA);
 		}
 	}
+
+	cv::Mat cpuMat() const { return mat.empty() ? EmptyMat : mat;}
 #endif
 
 	const int& width() const { return mat.cols; }

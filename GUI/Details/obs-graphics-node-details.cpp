@@ -51,3 +51,8 @@ OBSGraphicsNodeDetails::OBSGraphicsNodeDetails(GUIContext &context,
 
 	layout->addStretch();
 }
+
+OBSGraphicsNodeDetails::~OBSGraphicsNodeDetails()
+{
+	qDebug() << "OBSGraphicsNodeDetails::~OBSGraphicsNodeDetails";
+}

@@ -7,6 +7,7 @@ struct GUIContext;
 class OBSGraphicsNodeDetails : public QWidget {
 public:
 	OBSGraphicsNodeDetails(GUIContext& context, QWidget* parent = nullptr);
+	~OBSGraphicsNodeDetails() override;
 
 private:
 

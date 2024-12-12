@@ -37,6 +37,7 @@ OBSGraphicsPinDetails::OBSGraphicsPinDetails(GUIContext& context, OBSBlueprintPi
 
 OBSGraphicsPinDetails::~OBSGraphicsPinDetails()
 {
+	qDebug() << "OBSGraphicsPinDetails::~OBSGraphicsPinDetails";
 	mutex.lock();
 	if(!graphDeleted) {
 		ctx.onDeletion -= onGraphDeleted;

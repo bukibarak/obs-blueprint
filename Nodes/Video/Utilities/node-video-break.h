@@ -5,7 +5,7 @@ class NodeVideoBreak : public OBSBlueprintNode {
 public:
 	NodeVideoBreak() : OBSBlueprintNode(obs_module_text("NodeVideoBreak"))
 	{
-		videoPin = createInputPin(VIDEO_PIN, OBSFrame(), "video");
+		videoPin = createInputPin(VIDEO_PIN, OBSFrame::EmptyFrame, "video");
 
 		widthPin = createOutputPin(INT_PIN, 0, "width");
 		heightPin = createOutputPin(INT_PIN, 0, "height");

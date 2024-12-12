@@ -21,10 +21,13 @@ private:
 	OBSBlueprintOutputPin* videoPin;
 
 	float checkModifiedCounter = 0.0f;
+	float gifFrameSec = 0.0f;
+	float gifFrameLimit = 0.0f;
+	size_t gifCurrIndex = 0;
 	std::string filePath{};
 	time_t fileModifiedTime = -1;
-	gs_image_file_t image{};
-	uint64_t lastTime = 0;
+	std::vector<OBSFrame> imageFrames;
+	std::vector<uint32_t> imageDelayMs;
 
 	volatile bool loaded;
 

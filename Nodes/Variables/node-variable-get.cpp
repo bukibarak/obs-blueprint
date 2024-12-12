@@ -11,7 +11,7 @@ NodeVariableGet::NodeVariableGet(OBSBlueprintVariable *linkedVariable)
 
 	switch(variable->getPinType()) {
 	case VIDEO_PIN:
-		pin = createOutputPin(VIDEO_PIN, OBSFrame(), "video");
+		pin = createOutputPin(VIDEO_PIN, OBSFrame::EmptyFrame, "video");
 		break;
 	case BOOLEAN_PIN:
 		pin = createOutputPin(BOOLEAN_PIN, bool(), "bool");

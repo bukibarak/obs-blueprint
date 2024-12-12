@@ -1,5 +1,6 @@
 ﻿#include "obs-graphics-view.h"
 
+#include <QGuiApplication>
 #include <QMenu>
 #include <QScrollBar>
 
