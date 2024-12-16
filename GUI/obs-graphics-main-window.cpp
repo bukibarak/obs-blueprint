@@ -2,6 +2,7 @@
 
 #include <QHBoxLayout>
 #include <QSplitter>
+#include <sstream>
 
 #include "obs-graphics-scene.h"
 #include "obs-graphics-view.h"
@@ -48,7 +49,9 @@ OBSGraphicsMainWindow::~OBSGraphicsMainWindow()
 	delete layout;
 	delete splitter;
 	// delete view; // not needed, deleted when splitter is deleted
+	// delete varWidget;
+	// delete detailsWidget;
 	delete scene;
-	if (deleteComplete)
-		deleteComplete();
+	if (onDestructorEnd)
+		onDestructorEnd();
 }

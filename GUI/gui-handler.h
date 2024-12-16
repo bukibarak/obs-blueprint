@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include <functional>
 #include <mutex>
 
 class OBSGraphicsMainWindow;
@@ -11,6 +10,7 @@ public:
 	GUIHandler(OBSBlueprintGraph* g);
 	~GUIHandler();
 
+	static void OBSEvent(enum obs_frontend_event event, void* ptr);
 	void show() const;
 
 private:
@@ -19,6 +19,4 @@ private:
 
 	OBSGraphicsMainWindow* window = nullptr;
 	OBSBlueprintGraph* graph;
-
-	std::function<void()> mainWindowDeleted = [this]{window = nullptr;};
 };

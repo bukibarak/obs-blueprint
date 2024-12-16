@@ -16,12 +16,10 @@ protected:
 
 
 private:
-	bool graphDeleted = false;
 	QVBoxLayout* layout;
 	OBSGraphicsVariableDetails* variableDetails = nullptr;
 	OBSGraphicsNodeDetails* nodeDetails = nullptr;
 	void selectionChanged();
 	std::function<void()> onSelectionChanged = [this]{selectionChanged();};
-	std::function<void()> onGraphDeletion = [this]{graphDeleted = true;};
 	GUIContext& ctx;
 };

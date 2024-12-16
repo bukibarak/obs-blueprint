@@ -23,14 +23,13 @@ private:
 	OBSBlueprintPin* pin = nullptr;
 	OBSGraphicsTypeField* field = nullptr;
 	bool readOnly;
-	bool graphDeleted = false;
 	QLabel* connectionLabel = nullptr;
 
 	std::function<void()> pinConnectionStateChanged = [this] {
 		connectionLabel->setPixmap(pin->isConnected() ? PinColors::ConnectedIcon() : PinColors::DisconnectedIcon());
 		connectionLabel->update();
 
-		if(!graphDeleted && !readOnly && mutex.try_lock()) {
+		if(!readOnly && mutex.try_lock()) {
 			field->setEnabled(!pin->isConnected());
 			mutex.unlock();
 		}
@@ -46,9 +45,4 @@ private:
 	std::function<void(QString)> fieldValueChanged = [this](const QString& newVal) {
 		TypeConverter::FromString(pin, newVal.toStdString());
 	};
-
-	std::function<void()> onGraphDeleted = [this] {graphDeleted = true;};
-
-
-
 };

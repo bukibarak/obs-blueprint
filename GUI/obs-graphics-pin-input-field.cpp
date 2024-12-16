@@ -6,9 +6,6 @@ OBSGraphicsPinInputField::OBSGraphicsPinInputField(GUIContext& context,
 	OBSGraphicsPin *pin, QGraphicsItem *parent, Qt::WindowFlags wFlags)
 	: QGraphicsProxyWidget(parent, wFlags), ctx(context), pin(pin), bpPin(pin->getBlueprintPin())
 {
-	ctx.onDeletion += onGraphDeleted;
-
-
 	field = new OBSGraphicsTypeField(bpPin->getPinType(), nullptr, TypeConverter::AsString(pin->getBlueprintPin()).c_str(), false);
 	setScale(1.3);
 	//field->setMaximumWidth(80);
@@ -25,10 +22,8 @@ OBSGraphicsPinInputField::OBSGraphicsPinInputField(GUIContext& context,
 OBSGraphicsPinInputField::~OBSGraphicsPinInputField()
 {
 	mutex.lock();
-	if(!graphDeleted) {
-		ctx.onDeletion -= onGraphDeleted;
-		bpPin->onConnectionChanged -= pinConnectionStateChangedCallback;
-		field->onValueChanged -= fieldValueChanged;
-	}
+	bpPin->onConnectionChanged -= pinConnectionStateChangedCallback;
+	bpPin->onValueChanged -= pinValueChanged;
+	field->onValueChanged -= fieldValueChanged;
 	mutex.unlock();
 }

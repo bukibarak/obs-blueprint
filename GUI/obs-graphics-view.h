@@ -9,7 +9,7 @@ struct GUIContext;
 class OBSGraphicsView: public QGraphicsView {
 public:
 	OBSGraphicsView(GUIContext& context, QWidget* parent = nullptr);
-	~OBSGraphicsView() override { GDebug("[GUI] Graph View and all child graphics objects deleted!");}
+	~OBSGraphicsView() override { GDebug("[GUI] Deleting QWidget 'OBS Graphics View'...");}
 
 	QRectF getSceneViewport() const;
 	void resetScroll();

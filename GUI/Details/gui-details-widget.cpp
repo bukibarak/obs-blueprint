@@ -11,7 +11,6 @@ GUIDetailsWidget::GUIDetailsWidget(GUIContext &context, QWidget *parent) : QWidg
 {
 	ctx.detailsWidget = this;
 	ctx.onSelectionChanged += onSelectionChanged;
-	ctx.onDeletion += onGraphDeletion;
 
 
 	setStyleSheet("background-color: black;");
@@ -29,11 +28,8 @@ GUIDetailsWidget::GUIDetailsWidget(GUIContext &context, QWidget *parent) : QWidg
 
 GUIDetailsWidget::~GUIDetailsWidget()
 {
-	if (!graphDeleted) {
-		ctx.onSelectionChanged -= onSelectionChanged;
-		ctx.onDeletion -= onGraphDeletion;
-	}
-	GDebug("[GUI] Details widget and all child widgets deleted!");
+	GDebug("[GUI] Deleting QWidget 'GUI Details'...");
+	ctx.onSelectionChanged -= onSelectionChanged;
 }
 
 void GUIDetailsWidget::hideEvent(QHideEvent *event)
@@ -59,10 +55,7 @@ void GUIDetailsWidget::selectionChanged()
 		nodeDetails = nullptr;
 	}
 
-	if (graphDeleted) {
-		GWarn("GUI Details Window: selectionChanged() was called on deleted graph!");
-	}
-	else if(ctx.selectedVariable != nullptr) {
+	if(ctx.selectedVariable != nullptr) {
 		variableDetails = new OBSGraphicsVariableDetails(ctx, this);
 		layout->addWidget(variableDetails);
 	}

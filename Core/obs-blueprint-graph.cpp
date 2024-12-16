@@ -3,7 +3,7 @@
 #include "obs-blueprint-node.h"
 #include "obs-blueprint-connector.h"
 #include "obs-blueprint-variable.h"
-#include "GUI/gui-graph.h"
+#include "GUI/gui-handler.h"
 #include "Nodes/Video/node-color-source.h"
 #include "Nodes/Numbers/Float/node-float-to-int.h"
 #include "Nodes/Waves/node-sinus-time.h"

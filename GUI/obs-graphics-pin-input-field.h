@@ -18,24 +18,19 @@ private:
 
 	QMutex mutex;
 
-	bool graphDeleted = false;
 	GUIContext& ctx;
 	OBSGraphicsPin* pin = nullptr;
 	OBSBlueprintPin* bpPin = nullptr;
 	OBSGraphicsTypeField* field = nullptr;
 
-	std::function<void()> onGraphDeleted = [this]{graphDeleted = true;};
-
 	std::function<void()> pinConnectionStateChangedCallback = [this] {
-		if(!graphDeleted) {
-			if (pin->getBlueprintPin()->isConnected()) {
-				hide();
+		if (pin->getBlueprintPin()->isConnected()) {
+			hide();
 
-			} else if(field && mutex.try_lock()) {
-				field->setValue(TypeConverter::AsString(pin->getBlueprintPin()).c_str());
-				show();
-				mutex.unlock();
-			}
+		} else if(field && mutex.try_lock()) {
+			field->setValue(TypeConverter::AsString(pin->getBlueprintPin()).c_str());
+			show();
+			mutex.unlock();
 		}
 	};
 

@@ -10,8 +10,6 @@
 OBSGraphicsVariableDetails::OBSGraphicsVariableDetails(GUIContext& context,
 	QWidget *parent) : QWidget(parent), ctx(context), var(context.selectedVariable)
 {
-	ctx.onDeletion += onGraphDelete;
-
 	QVBoxLayout *layout = new QVBoxLayout(this);
 
 	QHBoxLayout* selectedLayout = new QHBoxLayout();
@@ -74,12 +72,8 @@ OBSGraphicsVariableDetails::OBSGraphicsVariableDetails(GUIContext& context,
 OBSGraphicsVariableDetails::~OBSGraphicsVariableDetails()
 {
 	disconnect(connection);
+	var->onRename -= onNameChanged;
 	valueEdit->onValueChanged -= onValueChanged;
-
-	if(!graphAlreadyDeleted) {
-		ctx.onDeletion -= onGraphDelete;
-		var->onRename -= onNameChanged;
-	}
 }
 
 void OBSGraphicsVariableDetails::nameLineEditFinished() const

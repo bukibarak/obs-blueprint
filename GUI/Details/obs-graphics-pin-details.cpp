@@ -8,8 +8,6 @@
 OBSGraphicsPinDetails::OBSGraphicsPinDetails(GUIContext& context, OBSBlueprintPin *p,
                                              QWidget *parent, bool forceReadOnly ) : QWidget(parent), ctx(context), pin(p), readOnly(forceReadOnly)
 {
-	ctx.onDeletion += onGraphDeleted;
-
 	QHBoxLayout* layout = new QHBoxLayout(this);
 	layout->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 	// layout->setSizeConstraint(QLayout::SetMaximumSize);
@@ -31,18 +29,18 @@ OBSGraphicsPinDetails::OBSGraphicsPinDetails(GUIContext& context, OBSBlueprintPi
 	layout->addWidget(field);
 	layout->addStretch();
 
+	mutex.lock();
 	pin->onConnectionChanged += pinConnectionStateChanged;
 	pin->onValueChanged += pinValueChanged;
 	field->onValueChanged += fieldValueChanged;
+	mutex.unlock();
 }
 
 OBSGraphicsPinDetails::~OBSGraphicsPinDetails()
 {
 	mutex.lock();
-	if(!graphDeleted) {
-		ctx.onDeletion -= onGraphDeleted;
-		pin->onConnectionChanged -= pinConnectionStateChanged;
-		pin->onValueChanged -= pinValueChanged;
-	}
+	pin->onConnectionChanged -= pinConnectionStateChanged;
+	pin->onValueChanged -= pinValueChanged;
+	field->onValueChanged -= fieldValueChanged;
 	mutex.unlock();
 }

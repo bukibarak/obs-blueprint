@@ -18,7 +18,6 @@ GUIVariablesWidget::GUIVariablesWidget(GUIContext& context,
 {
 	setFocusPolicy(Qt::ClickFocus);
 	ctx.varsWidget = this;
-	ctx.onDeletion += onGraphDelete;
 
 	QVBoxLayout *layout = new QVBoxLayout(this);
 	layout->setSpacing(0);
@@ -47,16 +46,13 @@ GUIVariablesWidget::GUIVariablesWidget(GUIContext& context,
 
 GUIVariablesWidget::~GUIVariablesWidget()
 {
-	GDebug("[GUI] Variable widget and all child widgets deleted!");
+	GDebug("[GUI] Deleting QWidget 'GUI Variables'...");
 	if(connection)
 		disconnect(connection);
 
-	if(!graphAlreadyDeleted) {
-		ctx.onDeletion -= onGraphDelete;
-		for(auto pairs : renames.asKeyValueRange())
-			if(pairs.first)
-				pairs.first->onRename -= pairs.second;
-	}
+	for(auto pairs : renames.asKeyValueRange())
+		if(pairs.first)
+			pairs.first->onRename -= pairs.second;
 }
 
 bool GUIVariablesWidget::tryCreate(OBSBlueprintVariable *variable)

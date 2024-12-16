@@ -27,7 +27,6 @@ struct GUIContext {
 	OBSBlueprintVariable* selectedVariable = nullptr;
 	OBSBlueprintNode* selectedNode = nullptr;
 	multicastDelegate_ZeroParam onSelectionChanged;
-	multicastDelegate_ZeroParam onDeletion;
 };
 
 class OBSGraphicsMainWindow : public QWidget {
@@ -35,9 +34,7 @@ public:
 	OBSGraphicsMainWindow(OBSBlueprintGraph* g, QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 	~OBSGraphicsMainWindow() override;
 
-	GUIContext& context() {return ctx;}
-
-	std::function<void()> deleteComplete;
+	std::function<void()> onDestructorEnd;
 
 private:
 

@@ -39,7 +39,4 @@ private:
 	GUIContext& ctx;
 	QHash<QListWidgetItem*, OBSBlueprintVariable*> variables;
 	QHash<OBSBlueprintVariable*, std::function<void(std::string, std::string)>> renames;
-
-	bool graphAlreadyDeleted = false;
-	std::function<void()> onGraphDelete = [this]{graphAlreadyDeleted = true;};
 };

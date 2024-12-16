@@ -1,4 +1,4 @@
-﻿#include "gui-graph.h"
+﻿#include "gui-handler.h"
 
 #include <iostream>
 #include <QApplication>
@@ -13,10 +13,11 @@
 
 GUIHandler::GUIHandler(OBSBlueprintGraph *g) : graph(g)
 {
+	obs_frontend_add_event_callback(OBSEvent, this);
 	QWidget *parent = static_cast<QWidget *>(obs_frontend_get_main_window());
 	window = new OBSGraphicsMainWindow(graph, parent, Qt::Window | Qt::CustomizeWindowHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
-	window->deleteComplete = [this] {
-		GDebug("[GUI] >> Main Window DESTROYED! <<");
+	window->onDestructorEnd = [this] {
+		GDebug("[GUI] OBS Blueprint main window Destroyed!");
 		window = nullptr;
 		cond.notify_all();
 	};
@@ -24,14 +25,22 @@ GUIHandler::GUIHandler(OBSBlueprintGraph *g) : graph(g)
 
 GUIHandler::~GUIHandler()
 {
+	obs_frontend_remove_event_callback(OBSEvent, this);
 	if (window != nullptr) {
+		GDebug("[GUI] Destroy OBS BP Main window using deleteLater() and lock");
 		std::mutex mtx{};
 		std::unique_lock lock{mtx};
 		window->deleteLater();
-		cond.wait_for(lock, std::chrono::milliseconds(100)); // TODO improve this. For now GUI is still deleted AFTER graph if closed
-		if (window != nullptr) {
-			window->context().onDeletion.execute();
-		}
+		cond.wait_for(lock, std::chrono::seconds(1));
+	}
+}
+
+void GUIHandler::OBSEvent(enum obs_frontend_event event, void *ptr)
+{
+	if (event == OBS_FRONTEND_EVENT_SCRIPTING_SHUTDOWN) {
+		GDebug("[GUI] Destroy OBS BP Main window using OBS Frontend API Event");
+		GUIHandler *handler = static_cast<GUIHandler *>(ptr);
+		delete handler->window;
 	}
 }
 

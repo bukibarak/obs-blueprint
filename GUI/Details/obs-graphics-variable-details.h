@@ -25,7 +25,4 @@ private:
 	std::function<void(std::string, std::string)> onNameChanged = [this](const std::string&, const std::string& curr) {nameLineEdit->setText(curr.c_str());};
 	std::function<void(QString)> onValueChanged = [this](const QString& value) {TypeConverter::FromString(var, value.toStdString());};
 	QMetaObject::Connection connection;
-
-	bool graphAlreadyDeleted = false;
-	std::function<void()> onGraphDelete = [this]{graphAlreadyDeleted = true;};
 };
