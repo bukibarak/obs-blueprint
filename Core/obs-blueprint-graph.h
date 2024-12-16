@@ -12,7 +12,7 @@ class OBSBlueprintInputPin;
 class OBSBlueprintOutputPin;
 class OBSBlueprintNode;
 class OBSBlueprintConnector;
-class GUIGraph;
+class GUIHandler;
 
 /**
  * \c OBSBlueprintGraph class. Can contain multiple \c OBSBlueprintNode linked with \c OBSBlueprintConnector .
@@ -105,14 +105,13 @@ public:
 	/** Add callbacks to this delegate if required. It will be called on each \a tick \b after the graph nodes are executed. */
 	multicastDelegate_ZeroParam onGraphEndTick;
 
-
 private:
 
 	std::mutex mutex;
 
 	float graphTime = 0.0f;
 
-	GUIGraph* guiGraph = nullptr;
+	GUIHandler* guiHandler = nullptr;
 
 	std::list<OBSBlueprintNode*> graphNodes;
 	std::list<OBSBlueprintConnector*> graphConnectors;

@@ -53,7 +53,7 @@ extern "C" {
 	{
 		blog(LOG_DEBUG, "\n");
 		GDebug("============== Begin graph destroy ==============\n");
-		delete guiGraph;
+		delete guiHandler;
 
 		GInfo("Deleting [%zu] connectors...", graphConnectors.size());
 		for(auto connector : graphConnectors) {
@@ -80,10 +80,10 @@ extern "C" {
 
 	void OBSBlueprintGraph::sourcePropertiesClick()
 	{
-		if(guiGraph == nullptr) {
-			guiGraph = new GUIGraph(this);
+		if (guiHandler == nullptr) {
+			guiHandler = new GUIHandler(this);
 		}
-		guiGraph->show();
+		guiHandler->show();
 	}
 
 	void OBSBlueprintGraph::tick(float deltaSeconds)

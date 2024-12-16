@@ -3,7 +3,7 @@
 #include <QMenu>
 
 #include "gui-variables-widget.h"
-#include "GUI/gui-graph.h"
+#include "GUI/obs-graphics-main-window.h"
 #include "GUI/obs-graphics-scene.h"
 
 OBSGraphicsVariablesList::OBSGraphicsVariablesList(GUIContext& context, GUIVariablesWidget *parent)

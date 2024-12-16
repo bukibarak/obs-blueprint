@@ -1,6 +1,6 @@
 ﻿#include "obs-graphics-pin-input-field.h"
 
-#include "gui-graph.h"
+#include "obs-graphics-main-window.h"
 
 OBSGraphicsPinInputField::OBSGraphicsPinInputField(GUIContext& context,
 	OBSGraphicsPin *pin, QGraphicsItem *parent, Qt::WindowFlags wFlags)

@@ -9,7 +9,7 @@
 #include <QWidgetAction>
 
 #include "context-menu-helper.h"
-#include "gui-graph.h"
+#include "obs-graphics-main-window.h"
 #include "obs-graphics-connector.h"
 #include "obs-graphics-node.h"
 #include "obs-graphics-pin-input-field.h"

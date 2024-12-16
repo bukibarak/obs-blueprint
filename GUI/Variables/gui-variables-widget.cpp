@@ -8,7 +8,7 @@
 
 #include "obs-graphics-variables-list.h"
 #include "Core/obs-blueprint-graph.h"
-#include "GUI/gui-graph.h"
+#include "GUI/obs-graphics-main-window.h"
 #include "GUI/obs-graphics-scene.h"
 #include "Helpers/obs-blueprint-factory.h"
 #include "Helpers/pin-helper.h"

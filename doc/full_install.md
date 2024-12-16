@@ -46,7 +46,7 @@ Then, click the **[Modify]** button at the bottom right of the window and wait f
 ![where-cmake](./images/where-cmake.png)
 
 > [!CAUTION]
-> The next steps are only required if you want to run OBS-Blueprint on the GPU (CUDA)
+> The next two steps are only required if you want to run OBS-Blueprint on the GPU (CUDA)
 
 11. Install [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit)
 12. Close all command-line interfaces and open one again by typing `cmd` in the Windows search bar. Then, type `where.exe nvcc`. If you have a path with "*.../NVIDIA GPU Computing Toolkit/CUDA/v12.6/...*" then you should be good!
@@ -143,7 +143,7 @@ popd
 
 6. Inside Git Bash, type `./install.sh` and press enter. **THIS WILL TAKE LIKE FOREVER, DO NOT PANIK** (with CUDA and both Debug and Release libraries it can take more than 2 hours)
 > [!IMPORTANT]
-> If you try to build OpenCV with GPU (CUDA), make sure to verify that OpenCV CUDA modules will be built on the OpenCV General configuration (see image below). If not (the CUDA modules are listed as *Unavailable*), abort the operation with Ctrl+C and make sure that both Git Bash and CMake can find nvcc. Sometimes, adding a new environment variable (not in the PATH) named `CUDA_PATH` with the path of cuda as a value `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6` can solve this problem. You may need to add other environment variables, such as `CUDNN_INCLUDE_DIR` and `CUDNN_LIBRARY`. [Detailled tutorial](https://medium.com/@batuhanhangun/opencv454-gpu-support-cpp-bef2cc145090)
+> If you try to build OpenCV with GPU (CUDA), make sure to verify that OpenCV CUDA modules will be built on the OpenCV General configuration (see image below). If not (the CUDA modules are listed as *Unavailable*), abort the operation with Ctrl+C and make sure that both Git Bash and CMake can find nvcc.<br/>Sometimes, adding a new environment variable (not in the PATH) named `CUDA_PATH` with the path of cuda as a value `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6` can solve this problem. You may need to add other environment variables, such as `CUDNN_INCLUDE_DIR` and `CUDNN_LIBRARY`. [Detailled tutorial](https://medium.com/@batuhanhangun/opencv454-gpu-support-cpp-bef2cc145090)
 
 ![opencv-build-config](./images/opencv-config.png)
 

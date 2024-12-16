@@ -4,7 +4,7 @@
 #include <QMenu>
 #include <QScrollBar>
 
-#include "gui-graph.h"
+#include "obs-graphics-main-window.h"
 #include "obs-graphics-scene.h"
 #include "Core/obs-blueprint-variable.h"
 #include "Nodes/Variables/node-variable-get.h"
@@ -138,5 +138,6 @@ void OBSGraphicsView::dropEvent(QDropEvent *event)
 void OBSGraphicsView::focusInEvent(QFocusEvent *event)
 {
 	QGraphicsView::focusInEvent(event);
-	ctx.varsList->resetSelected();
+	if (ctx.varsList != nullptr)
+		ctx.varsList->resetSelected();
 }

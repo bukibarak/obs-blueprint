@@ -5,7 +5,7 @@
 
 #include "obs-graphics-node-details.h"
 #include "obs-graphics-variable-details.h"
-#include "GUI/gui-graph.h"
+#include "GUI/obs-graphics-main-window.h"
 
 GUIDetailsWidget::GUIDetailsWidget(GUIContext &context, QWidget *parent) : QWidget(parent), ctx(context)
 {

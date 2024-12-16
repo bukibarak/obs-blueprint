@@ -1,55 +1,42 @@
 ﻿#include "gui-graph.h"
 
+#include <iostream>
 #include <QApplication>
-#include <QHBoxLayout>
+#include <QScreen>
 #include <QWindow>
-#include <QSplitter>
 
 #include "obs-frontend-api.h"
-#include "obs-graphics-scene.h"
-#include "obs-graphics-view.h"
-#include "Details/gui-details-widget.h"
-#include "Variables/gui-variables-widget.h"
+#include "obs-graphics-main-window.h"
+#include "Core/obs-blueprint-graph.h"
+#include "Helpers/global-logger.h"
 
 
-GUIGraph::GUIGraph(OBSBlueprintGraph *attachedGraph) : graph(attachedGraph)
+GUIHandler::GUIHandler(OBSBlueprintGraph *g) : graph(g)
 {
-
-	ctx.graph = graph;
-	ctx.GUIgraph = this;
-	window = new QWidget(static_cast<QWidget *>(obs_frontend_get_main_window()), Qt::Window | Qt::CustomizeWindowHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
-	view = new OBSGraphicsView(ctx, window);
-	scene = new OBSGraphicsScene(ctx);
-	view->setScene(scene);
-
-	varWidget = new GUIVariablesWidget(ctx, window);
-	detailsWidget = new GUIDetailsWidget(ctx, window);
-
-
-	QSplitter* splitter = new QSplitter();
-	splitter->addWidget(varWidget);
-	splitter->addWidget(view);
-	splitter->addWidget(detailsWidget);
-	varWidget->resize(500, varWidget->height());
-	detailsWidget->resize(700, detailsWidget->height());
-
-	QHBoxLayout *layout = new QHBoxLayout(window);
-	layout->setSpacing(0);
-	layout->setContentsMargins(0,0,0,0);
-	layout->addWidget(splitter);
-
-
-	scene->initializeFromBlueprintGraph();
+	QWidget *parent = static_cast<QWidget *>(obs_frontend_get_main_window());
+	window = new OBSGraphicsMainWindow(graph, parent, Qt::Window | Qt::CustomizeWindowHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
+	window->deleteComplete = [this] {
+		GDebug("[GUI] >> Main Window DESTROYED! <<");
+		window = nullptr;
+		cond.notify_all();
+	};
 }
 
-GUIGraph::~GUIGraph()
+GUIHandler::~GUIHandler()
 {
-	ctx.onDeletion.execute();
-	window->deleteLater(); // WARNING: This might delete all Qt Objects AFTER the graph is deleted. This means, all pointers to OBSBlueprint objects might be invalid!
+	if (window != nullptr) {
+		std::mutex mtx{};
+		std::unique_lock lock{mtx};
+		window->deleteLater();
+		cond.wait_for(lock, std::chrono::milliseconds(100)); // TODO improve this. For now GUI is still deleted AFTER graph if closed
+		if (window != nullptr) {
+			window->context().onDeletion.execute();
+		}
+	}
 }
 
 
-void GUIGraph::show() const
+void GUIHandler::show() const
 {
 	// Hide default OBS properties window, TODO how to do it better? maybe even prevent properties window creation?
 	const QWindowList list = QApplication::topLevelWindows();
@@ -64,12 +51,9 @@ void GUIGraph::show() const
 		}
 	}
 
-	view->resetTransform();
-	view->scale(0.25, 0.25);
-	scene->resetZoomLevel();
-	view->resetScroll();
+	window->adjustSize(); // Size to content
 
-	window->adjustSize();
+	// Center window on screen
 	QRect screenRect = QApplication::primaryScreen()->geometry();
 	QRect windowRect = window->geometry();
 	window->move((screenRect.width() - windowRect.width())/2, (screenRect.height() - windowRect.height())/2);

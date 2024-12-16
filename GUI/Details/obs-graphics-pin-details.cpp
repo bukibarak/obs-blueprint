@@ -2,10 +2,11 @@
 
 #include <QVBoxLayout>
 
-#include "GUI/gui-graph.h"
+#include "GUI/obs-graphics-main-window.h"
+
 
 OBSGraphicsPinDetails::OBSGraphicsPinDetails(GUIContext& context, OBSBlueprintPin *p,
-	QWidget *parent, bool forceReadOnly ) : QWidget(parent), ctx(context), pin(p), readOnly(forceReadOnly)
+                                             QWidget *parent, bool forceReadOnly ) : QWidget(parent), ctx(context), pin(p), readOnly(forceReadOnly)
 {
 	ctx.onDeletion += onGraphDeleted;
 

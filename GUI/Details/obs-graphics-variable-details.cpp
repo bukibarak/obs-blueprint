@@ -3,7 +3,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
-#include "GUI/gui-graph.h"
+#include "GUI/obs-graphics-main-window.h"
 #include "GUI/obs-graphics-type-field.h"
 #include "GUI/obs-graphics-view.h"
 

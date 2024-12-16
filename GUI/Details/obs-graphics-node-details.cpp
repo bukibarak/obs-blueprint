@@ -4,7 +4,7 @@
 
 #include "obs-graphics-pin-details.h"
 #include "Core/obs-blueprint-node.h"
-#include "GUI/gui-graph.h"
+#include "GUI/obs-graphics-main-window.h"
 
 OBSGraphicsNodeDetails::OBSGraphicsNodeDetails(GUIContext &context,
         QWidget *parent) : QWidget(parent), ctx(context), node(ctx.selectedNode)

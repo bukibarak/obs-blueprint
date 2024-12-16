@@ -1,50 +1,24 @@
 ﻿#pragma once
-#include "Structs/multicast-delegate.h"
+#include <functional>
+#include <mutex>
 
-
-class OBSBlueprintNode;
-class OBSBlueprintVariable;
-class GUIDetailsWidget;
-class GUIGraph;
-class OBSGraphicsVariablesList;
-class GUIVariablesWidget;
-class QWidget;
-class OBSGraphicsView;
-class OBSGraphicsScene;
+class OBSGraphicsMainWindow;
 class OBSBlueprintGraph;
 
-struct GUIContext {
-	OBSBlueprintGraph* graph = nullptr;
-	GUIGraph* GUIgraph = nullptr;
-	GUIVariablesWidget* varsWidget = nullptr;
-	OBSGraphicsVariablesList* varsList = nullptr;
-	GUIDetailsWidget* detailsWidget = nullptr;
-	OBSGraphicsScene* scene = nullptr;
-	OBSGraphicsView* view = nullptr;
-
-	OBSBlueprintVariable* selectedVariable = nullptr;
-	OBSBlueprintNode* selectedNode = nullptr;
-	multicastDelegate_ZeroParam onSelectionChanged;
-	multicastDelegate_ZeroParam onDeletion;
-};
-
-class GUIGraph {
+class GUIHandler {
 public:
 
-	GUIGraph(OBSBlueprintGraph* attachedGraph);
-	~GUIGraph();
+	GUIHandler(OBSBlueprintGraph* g);
+	~GUIHandler();
 
 	void show() const;
 
 private:
 
-	GUIContext ctx{};
+	std::condition_variable cond{};
 
-	QWidget* window;
-	OBSGraphicsScene* scene;
-	OBSGraphicsView* view;
-	GUIVariablesWidget* varWidget;
-	GUIDetailsWidget* detailsWidget;
+	OBSGraphicsMainWindow* window = nullptr;
 	OBSBlueprintGraph* graph;
 
+	std::function<void()> mainWindowDeleted = [this]{window = nullptr;};
 };
