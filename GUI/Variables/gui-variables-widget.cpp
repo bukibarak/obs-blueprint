@@ -94,13 +94,13 @@ bool GUIVariablesWidget::tryDelete(QListWidgetItem *item)
 	OBSBlueprintVariable* variable = variables[item];
 	bool ok = true;
 	if(ctx.graph->isVariableUsed(variable)) {
-		// TODO maybe debug list of nodes that will be deleted (or at least amount of nodes)
+		// TODO: maybe debug list of nodes that will be deleted (or at least amount of nodes)
 		QString label{"The variable '" + QString(variable->getDisplayName()) + "' (" + QString(PinName[variable->getPinType()]) + ") is still in use.\nDo you want to force delete it? All related nodes will be deleted too."};
 		QMessageBox::StandardButton response = QMessageBox::warning(this, "Variable in use!", label, QMessageBox::Yes | QMessageBox::No);
 		ok = response == QMessageBox::Yes;
 	}
 	if(ok) {
-		variable->onRename -= renames[variable]; // TODO Really useful ? variable is deleted in next line
+		variable->onRename -= renames[variable]; // TODO: Really useful ? variable is deleted in next line
 		variablesList->removeItemWidget(item);
 		variables.remove(item);
 		renames.remove(variable);

@@ -112,7 +112,7 @@ void OBSGraphicsView::dropEvent(QDropEvent *event)
 		}
 		else if(!ctrl && alt) {
 			// Drop with alt pressed --> SET node
-			// TODO SET NODE
+			// TODO: SET NODE
 		}
 		else {
 			// None or both pressed --> show context menu
@@ -123,7 +123,7 @@ void OBSGraphicsView::dropEvent(QDropEvent *event)
 			if(action == get)
 				node = new NodeVariableGet(variable);
 			else if(action == set)
-				action = nullptr;// TODO NODE SET
+				action = nullptr;// TODO: NODE SET
 		}
 
 		if(node != nullptr) {

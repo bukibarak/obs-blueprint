@@ -118,8 +118,9 @@ private:
 	std::list<OBSBlueprintVariable*> graphVariables;
 
 	OBSBlueprintInputPin* mainVideoInput = nullptr;
+	OBSBlueprintConnector* mainVideoConnector = nullptr;
 	bool inputConnected = false;
 
-	cv::Mat pixelsMat{OBSFrame::EmptyMat};
+	cv::Mat pixels{0, 0, CV_8UC4};
 };
 

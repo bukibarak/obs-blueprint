@@ -16,7 +16,7 @@ public:
 
 private:
 
-	QMutex mutex;
+	QMutex mutex{};
 
 	GUIContext& ctx;
 	OBSGraphicsPin* pin = nullptr;

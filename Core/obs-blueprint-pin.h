@@ -5,6 +5,7 @@
 
 #include "pin-type.h"
 #include "Helpers/global-logger.h"
+#include "Structs/graphics-options.h"
 #include "Structs/multicast-delegate.h"
 
 class OBSBlueprintConnector;
@@ -74,6 +75,9 @@ public:
 	const char* getDisplayName() const { return displayName.c_str(); }
 
 	virtual bool isConnected() const = 0;
+
+	/** Pin graphical options managed by GUI (Qt) */
+	PinGraphicsOptions graphicsOptions;
 
 	/** This delegate is called by each time the connection change, see \c OBSBlueprintConnector . Used to update UI */
 	multicastDelegate_ZeroParam onConnectionChanged;

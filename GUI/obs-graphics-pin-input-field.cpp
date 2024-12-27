@@ -6,17 +6,18 @@ OBSGraphicsPinInputField::OBSGraphicsPinInputField(GUIContext& context,
 	OBSGraphicsPin *pin, QGraphicsItem *parent, Qt::WindowFlags wFlags)
 	: QGraphicsProxyWidget(parent, wFlags), ctx(context), pin(pin), bpPin(pin->getBlueprintPin())
 {
-	field = new OBSGraphicsTypeField(bpPin->getPinType(), nullptr, TypeConverter::AsString(pin->getBlueprintPin()).c_str(), false);
+	// QGraphiscProxyWidget associated widget MUST have nullptr parent, see more on setWidget() at the end of constructor.
+	field = new OBSGraphicsTypeField({bpPin->getPinType(), bpPin->graphicsOptions}, nullptr, TypeConverter::AsString(pin->getBlueprintPin()).c_str(), false);
 	setScale(1.3);
-	//field->setMaximumWidth(80);
-	// typeField->setAlignment(Qt::AlignRight);
 
-
+	mutex.lock();
 	bpPin->onConnectionChanged += pinConnectionStateChangedCallback;
 	bpPin->onValueChanged += pinValueChanged;
 	field->onValueChanged += fieldValueChanged;
+	mutex.unlock();
 
 	setWidget(field); // Widget will automatically be deleted by Qt when GraphicsProxy is deleted!
+	// See more: https://doc.qt.io/qt-6/qgraphicsproxywidget.html#setWidget
 }
 
 OBSGraphicsPinInputField::~OBSGraphicsPinInputField()

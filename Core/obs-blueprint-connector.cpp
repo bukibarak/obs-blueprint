@@ -46,10 +46,11 @@ void OBSBlueprintConnector::propagateData() const
 		size = std::min(size, otherSize);
 	}
 	if(fromPin->getPinType() == STRING_PIN) {
-		toPin->setValue(fromPin->getValue<std::string>()); // TODO cannot memcpy std::string!!! --> use const char* instead??
+		toPin->setValue(fromPin->getValue<std::string>()); // TODO: cannot memcpy std::string!!! --> use const char* instead??
 	}
 	else if (fromPin->getPinType() == VIDEO_PIN) {
-		toPin->setValue(fromPin->getValue<OBSFrame>());
+		const OBSFrame& f = fromPin->getValue<OBSFrame>();
+		toPin->setValue(f);
 	}
 	else {
 		memcpy(toPin->rawValuePtr, fromPin->rawValuePtr, size);

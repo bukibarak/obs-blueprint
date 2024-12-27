@@ -34,7 +34,7 @@ extern "C" {
 		NodeImageSource* imageSourceNode = new NodeImageSource("C:/temp/q.gif");
 		addNode(imageSourceNode);
 
-		createConnector(imageSourceNode->getOutputPins()[0], mainVideoInput);
+		//createConnector(imageSourceNode->getOutputPins()[0], mainVideoInput);
 
 		OBSBlueprintVariable* v1 = OBSBlueprintVariable::CreateVariable<float>(FLOAT_PIN, "My float variable");
 		v1->setValue(100.0f);
@@ -95,28 +95,40 @@ extern "C" {
 
 		// If the main video input pin is connected, use it to call tick() on parent node
 		if(mainVideoInput->isConnected()) {
-			if(mainVideoInput->getConnector()->getFromPin() == nullptr || mainVideoInput->getConnector()->getFromPin()->getParentNode() == nullptr) {
+			// Check if connector have been changed
+			bool forceRedraw = mainVideoInput->getConnector() == mainVideoConnector;
+			mainVideoConnector = mainVideoInput->getConnector();
+
+			if(mainVideoConnector->getFromPin() == nullptr || mainVideoConnector->getFromPin()->getParentNode() == nullptr) {
 				GError("Graph main video pin is connected, but no corresponding pin/node was found! OBS scene will not be updated!");
 			} else {
 				// Use connector to call tick on parent node
-				mainVideoInput->getConnector()->getFromPin()->getParentNode()->tick(deltaSeconds);
+				mainVideoConnector->getFromPin()->getParentNode()->tick(deltaSeconds);
 
 				// Propagate data to main video input pin
-				mainVideoInput->getConnector()->propagateData();
+				mainVideoConnector->propagateData();
 
 				// Update pixels matrix if frame has been updated
 				const OBSFrame& frame = mainVideoInput->getValue<OBSFrame>();
-				if (!inputConnected || frame.updated) {
-					if (frame.mat.data == OBSFrame::EmptyFrame.mat.data)
-						pixelsMat = OBSFrame::EmptyMat;
-					else
-						pixelsMat = frame.cpuMat();
+				if (forceRedraw || !inputConnected || frame.updated) {
+					if (frame.empty() && !pixels.empty())
+						pixels = OBSFrame::EmptyFrame.getMat();
+					else if (!frame.empty()) {
+						// I need to do it this way because if we use copyTo(pixels) directly, then pixels data ptr might
+						// be unchanged which will result in obs-blueprint-source.c, line 100 "pixels == context->pixels"
+						// to returns true even if pixels data DOES have changed. Other solution would be to change
+						// the render behaviour in obs-blueprint-source.c
+						cv::Mat newPixels;
+						frame.getMat().copyTo(newPixels);
+						pixels = newPixels;
+					}
 				}
 				inputConnected = true;
 			}
 		}
 		else {
-			pixelsMat = OBSFrame::EmptyMat;
+			if (!pixels.empty())
+				pixels = OBSFrame::EmptyFrame.getMat();
 			inputConnected = false;
 		}
 
@@ -129,20 +141,23 @@ extern "C" {
 
 	pixel * OBSBlueprintGraph::getRenderPixels() const
 	{
-		pixel* pixels = reinterpret_cast<pixel*>(pixelsMat.data);
+		if (pixels.empty())
+			return nullptr;
 
-		if(pixels == nullptr && (pixelsMat.cols > 0 || pixelsMat.rows > 0)) GError("No frame found in graph main video pin! OBS will probably crash...");
-		return pixels;
+		pixel* pixelsData = reinterpret_cast<pixel*>(pixels.data);
+		if(pixelsData == nullptr && (pixels.cols > 0 || pixels.rows > 0))
+			GError("No frame found in graph main video pin! OBS will probably crash...");
+		return pixelsData;
 	}
 
 	uint32_t OBSBlueprintGraph::getWidth() const
 	{
-		return pixelsMat.cols;
+		return pixels.cols;
 	}
 
 	uint32_t OBSBlueprintGraph::getHeight() const
 	{
-		return pixelsMat.rows;
+		return pixels.rows;
 	}
 }
 
@@ -158,7 +173,7 @@ void OBSBlueprintGraph::deleteVariable(OBSBlueprintVariable *variable)
 {
 	mutex.lock();
 	graphVariables.remove(variable);
-	// TODO DELETE NODES LINKED TO VARIABLES!
+	// TODO: DELETE NODES LINKED TO VARIABLES!
 	delete variable;
 	mutex.unlock();
 }
@@ -166,7 +181,7 @@ void OBSBlueprintGraph::deleteVariable(OBSBlueprintVariable *variable)
 bool OBSBlueprintGraph::isVariableUsed(OBSBlueprintVariable *variable)
 {
 	return false;
-	// TODO CHECK WITH NODES IF USED
+	// TODO: CHECK WITH NODES IF USED
 }
 
 OBSBlueprintConnector* OBSBlueprintGraph::createConnector(OBSBlueprintOutputPin *from,

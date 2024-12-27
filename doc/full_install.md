@@ -49,7 +49,11 @@ Then, click the **[Modify]** button at the bottom right of the window and wait f
 > The next two steps are only required if you want to run OBS-Blueprint on the GPU (CUDA)
 
 11. Install [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit)
-12. Close all command-line interfaces and open one again by typing `cmd` in the Windows search bar. Then, type `where.exe nvcc`. If you have a path with "*.../NVIDIA GPU Computing Toolkit/CUDA/v12.6/...*" then you should be good!
+12. Download [NVIDIA Video Codec SDK for application developers](https://developer.nvidia.com/nvidia-video-codec-sdk/download). 
+13. Copy the content of `Interface` into `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\include` (you may change the CUDA version from *v12.6* to your CUDA version)
+    * *You can see [this tutorial video](https://youtu.be/7vFhUnMTxDM?si=jf7tssG6dKttlobT) to install the SDK with OpenCV, but it's a bit outdated...*
+14. Copy the content of `Lib` into `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\lib`
+12. Close all command-line interfaces and open one again by typing `cmd` in the Windows search bar. Then, type `where.exe nvcc`. Make sure the result is a path like "*.../NVIDIA GPU Computing Toolkit/CUDA/v12.6/...*"
 
 ![where-nvcc](./images/where-nvcc.png)
 
@@ -90,6 +94,12 @@ pushd build_opencv
 CMAKE_OPTIONS=(-DBUILD_opencv_highgui:BOOL=OFF -DBUILD_PERF_TESTS:BOOL=OFF -DBUILD_TESTS:BOOL=OFF -DBUILD_DOCS:BOOL=OFF -DBUILD_EXAMPLES:BOOL=OFF -DWITH_CUDA:BOOL=ON -DINSTALL_CREATE_DISTRIB=ON)
 set -x
 cmake "${CMAKE_GENERATOR_OPTIONS[@]}" "${CMAKE_OPTIONS[@]}" -DOPENCV_EXTRA_MODULES_PATH="$myRepo"/opencv_contrib/modules -DCMAKE_INSTALL_PREFIX="$myRepo/lib/$RepoSource" "$myRepo/$RepoSource"
+read -p "Do you want to build OpenCV with the following configuration? (Y/n) " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1 # handle exits from shell or function but don't exit interactive shell
+fi
 echo "************************* $Source_DIR -->debug"
 cmake --build .  --config debug
 echo "************************* $Source_DIR -->release"
@@ -129,6 +139,12 @@ pushd build_opencv
 CMAKE_OPTIONS=(-DBUILD_opencv_highgui:BOOL=OFF -DBUILD_PERF_TESTS:BOOL=OFF -DBUILD_TESTS:BOOL=OFF -DBUILD_DOCS:BOOL=OFF -DBUILD_EXAMPLES:BOOL=OFF -DWITH_CUDA:BOOL=OFF -DINSTALL_CREATE_DISTRIB=ON)
 set -x
 cmake "${CMAKE_GENERATOR_OPTIONS[@]}" "${CMAKE_OPTIONS[@]}" -DOPENCV_EXTRA_MODULES_PATH="$myRepo"/opencv_contrib/modules -DCMAKE_INSTALL_PREFIX="$myRepo/lib/$RepoSource" "$myRepo/$RepoSource"
+read -p "Do you want to build OpenCV with the following configuration? (Y/n) " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1 # handle exits from shell or function but don't exit interactive shell
+fi
 echo "************************* $Source_DIR -->debug"
 cmake --build .  --config debug
 echo "************************* $Source_DIR -->release"
@@ -139,15 +155,17 @@ popd
 ```
 
 > [!NOTE]
-> If you don't use Visual Studio 2022 x64, you need to change the line with `CMAKE_GENERATOR_OPTIONS` and set it to your architecture. If you don't need to build Debug libraries, comment the script lines 29, 30 and 34.
+> If you don't use Visual Studio 2022 x64, you need to change the line with `CMAKE_GENERATOR_OPTIONS` and set it to your architecture. If you don't need to build Debug configuration, comment the script lines 35, 36 and 40.
 
-6. Inside Git Bash, type `./install.sh` and press enter. **THIS WILL TAKE LIKE FOREVER, DO NOT PANIK** (with CUDA and both Debug and Release libraries it can take more than 2 hours)
+6. Inside Git Bash, type `./install.sh` and press enter. Wait for the message `Do you want to build OpenCV with the following configuration? (Y/n)` to appear.
 > [!IMPORTANT]
-> If you try to build OpenCV with GPU (CUDA), make sure to verify that OpenCV CUDA modules will be built on the OpenCV General configuration (see image below). If not (the CUDA modules are listed as *Unavailable*), abort the operation with Ctrl+C and make sure that both Git Bash and CMake can find nvcc.<br/>Sometimes, adding a new environment variable (not in the PATH) named `CUDA_PATH` with the path of cuda as a value `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6` can solve this problem. You may need to add other environment variables, such as `CUDNN_INCLUDE_DIR` and `CUDNN_LIBRARY`. [Detailled tutorial](https://medium.com/@batuhanhangun/opencv454-gpu-support-cpp-bef2cc145090)
+> If you try to build OpenCV with GPU (CUDA), make sure to verify that OpenCV CUDA modules will be built on the OpenCV General configuration (see image below). If not (the CUDA modules are listed as *Unavailable*), abort the operation and make sure that both Git Bash and CMake can find nvcc.<br/>Sometimes, adding a new environment variable (not in the PATH) named `CUDA_PATH` with the path of cuda as a value `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6` can solve this problem. You may need to add other environment variables, such as `CUDNN_INCLUDE_DIR` and `CUDNN_LIBRARY`. [Detailled tutorial](https://medium.com/@batuhanhangun/opencv454-gpu-support-cpp-bef2cc145090)
 
 ![opencv-build-config](./images/opencv-config.png)
 
 *For more information about the OpenCV install script configuration, please see: https://docs.opencv.org/4.x/db/d05/tutorial_config_reference.html*
+
+7. If the OpenCV configuration fit your requirements, type `Y`. Wait for the OpenCV build completion. **THIS MAY TAKE FOREVER!!** *(with CUDA and Both Debug and Release it will take up to 3-4 hours)*
 
 
 ## Install - OBS with OBS-Blueprint
@@ -176,13 +194,13 @@ popd
 13. Type `cd build_x64`
 14. Type `rider obs-studio.sln`. You may want to open Rider once before in order to complete the setup (if it is the first time that you use Rider).
 15. If prompted for untrusted solution, choose **Trust and Open**.
-16. *(you can skip this step if you don't need GPU with CUDA)* On the left pannel, with the solution explorer, click on **plugins** > **obs-blueprint** > **obs-blueprint** > **opencv-conf.h** and change the first line of the file:
+<!-- 16. *(you can skip this step if you don't need GPU with CUDA)* On the left pannel, with the solution explorer, click on **plugins** > **obs-blueprint** > **obs-blueprint** > **opencv-conf.h** and change the first line of the file:
     * `#define CUDA_AVAILABLE 0`
     * to
-    * `#define CUDA_AVAILABLE 1`
-17. On the top right corner, click on *"ALL_BUILD"*, (yellow box on the image below) then expand *All Configurations* and choose **obs-studio**
-18. On the left, click on *"Debug | x64"* (red box on image below) to choose your build configuration. If you want best performances, choose **Release**.
-19. Then, click the hammer to build OBS or the play button to build and execute OBS (orange boxes on image below).
+    * `#define CUDA_AVAILABLE 1` -->
+16. On the top right corner, click on *"ALL_BUILD"*, (yellow box on the image below) then expand *All Configurations* and choose **obs-studio**
+17. On the left, click on *"Debug | x64"* (red box on image below) to choose your build configuration. If you want best performances, choose **Release**.
+18. Then, click the hammer to build OBS or the play button to build and execute OBS (orange boxes on image below).
 
 ![rider-build-select](./images/rider-build-select.png)
 

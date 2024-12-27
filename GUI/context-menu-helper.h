@@ -5,7 +5,9 @@
 #include "Nodes/Numbers/Float/node-float-abs.h"
 #include "Nodes/Numbers/Float/node-float-to-int.h"
 #include "Nodes/Numbers/Int/node-int-to-float.h"
+#include "Nodes/Video/node-camera-source.h"
 #include "Nodes/Video/node-image-souce.h"
+#include "Nodes/Video/node-video-source.h"
 #include "Nodes/Video/Transforms/node-video-layer.h"
 #include "Nodes/Video/Utilities/node-video-break.h"
 
@@ -121,6 +123,8 @@ private:
 	inline static std::vector<ContextMenuEntry> entries{
 		ContextMenuEntry::Add<NodeColorSource>("Color source"),
 		ContextMenuEntry::Add<NodeImageSource>("Image source"),
+		ContextMenuEntry::Add<NodeVideoSource>("Video source"),
+		ContextMenuEntry::Add<NodeCameraSource>("Camera source"),
 		ContextMenuEntry::Add<NodeFloatAbs>("Absolute value (float)", "/Numbers/Float"),
 		ContextMenuEntry::Add<NodeFloatToInt>("Float to Integer", "/Numbers/Float"),
 		ContextMenuEntry::Add<NodeIntToFloat>("Integer to float", "/Numbers/Integer"),

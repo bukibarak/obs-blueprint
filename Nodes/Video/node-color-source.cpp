@@ -21,32 +21,30 @@ NodeColorSource::NodeColorSource(const int32_t& defaultWidth, const int32_t& def
 
 void NodeColorSource::execute(float deltaSeconds)
 {
-	const int32_t& pinWValue = pinWidth->getValue<int32_t>();
-	const int32_t& pinHValue = pinHeight->getValue<int32_t>();
-	const uint32_t& pinCValue = pinColor->getValue<uint32_t>();
+	const int32_t& w = pinWidth->getValue<int32_t>();
+	const int32_t& h = pinHeight->getValue<int32_t>();
+	const uint32_t& c = pinColor->getValue<uint32_t>();
 
 	const OBSFrame& frame = pinVideo->getValue<OBSFrame>();
 
-	if (pinWValue != frame.width() || pinHValue != frame.height() || pinCValue != color) {
-		// Size of the frame matrix image have changed, recreate
-		int32_t newWidth, newHeight;
-		color = pinCValue;
-
-		if (pinWValue < 0 || pinHValue < 0) {
-			GError("Color source cannot have a negative width or height! Will not output anything...");
-			newWidth = 0;
-			newHeight = 0;
+	// Check if pixel matrix needs to be updated
+	if (w != frame.width() || h != frame.height() || c != color) {
+		if (w <= 0 || h <= 0) {
+			// width and height must be > 0, otherwise it's just empty frame
+			if (!pinVideo->getValue<OBSFrame>().empty()) {
+				pinVideo->setValue(OBSFrame::EmptyFrame);
+				haveExecutedThisCycle = true;
+			}
 		}
 		else {
-			newWidth = pinWValue;
-			newHeight = pinHValue;
+			color = c;
+			pixel p = pixel::ColorToPixel(color);
+			cv::UMat m{h, w, CV_8UC4, cv::Scalar(p.b, p.g, p.r, p.a)};
+			pinVideo->setValue(OBSFrame(m));
+			haveExecutedThisCycle = true;
 		}
-
-		pixel p = pixel::ColorToPixel(color);
-		pinVideo->setValue(OBSFrame({newHeight, newWidth, CV_8UC4, cv::Scalar(p.b, p.g, p.r, p.a)}));
-		haveExecutedThisCycle = true;
 	}
-	else {
+	else if (!frame.empty()) {
 		pinVideo->getValuePtr<OBSFrame>()->updated = false;
 	}
 }

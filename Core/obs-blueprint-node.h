@@ -6,11 +6,6 @@
 
 class OBSBlueprintConnector;
 
-struct NodeGraphicsOptions {
-	bool isCompactNode = false;
-	bool showName = true;
-};
-
 template<class T>
 class NodeFactory {
 public:

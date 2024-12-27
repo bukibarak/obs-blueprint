@@ -154,7 +154,7 @@ void OBSGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 			mouseClickEvent(event);
 		} else {
 			if(pressedButton == Qt::LeftButton) {
-				//TODO left moving click end --> end of rubber band (select all nodes inside)
+				//TODO: left moving click end --> end of rubber band (select all nodes inside)
 				if(pressedPin != nullptr) {
 					OBSGraphicsPin* destinationPin = getGraphicsPinAt(event->scenePos());
 					if(destinationPin != nullptr) {
@@ -180,7 +180,7 @@ void OBSGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 				}
 			}
 			else if (pressedButton == Qt::RightButton) {
-				//TODO right moving click end --> do noting?
+				//TODO: right moving click end --> do noting?
 			}
 		}
 
@@ -207,7 +207,7 @@ void OBSGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 void OBSGraphicsScene::mouseClickEvent(QGraphicsSceneMouseEvent *event)
 {
 	if(pressedButton == Qt::LeftButton) {
-		// TODO LEFT CLICK ?
+		// TODO: LEFT CLICK ?
 	}
 	else if(pressedButton == Qt::RightButton) {
 		QApplication::changeOverrideCursor(Qt::ArrowCursor);
@@ -400,7 +400,7 @@ OBSGraphicsConnector * OBSGraphicsScene::getGraphicsConnectorAt(
 			qreal lowerPart = qSqrt(qPow(y2 - y1, 2) + qPow(x2 - x1, 2));
 			qreal distance = upperPart / lowerPart;
 
-			if(distance < 40) // TODO distance based on zoom level?
+			if(distance < 40) // TODO: distance based on zoom level?
 				return connector;
 		}
 	}

@@ -17,7 +17,7 @@ public:
 		haveExecutedThisCycle = true;
 	}
 
-// protected: TODO WHY PROTECTED NOT WORKING ??
+// protected: // TODO: WHY PROTECTED NOT WORKING ??
 	static OBSBlueprintNode* CreateDefault() { return new NodeFloatAbs(); }
 	static std::vector<PinType> InputPins() { return {FLOAT_PIN}; }
 	static std::vector<PinType> OutputPins() { return {FLOAT_PIN}; }

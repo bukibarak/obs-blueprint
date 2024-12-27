@@ -169,7 +169,7 @@ void OBSGraphicsNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 		}
 	}
 
-	// TODO REMOVE - DEBUG/TEST ONLY
+	// TODO: REMOVE - DEBUG/TEST ONLY
 	// QPen p{Qt::yellow};
 	// p.setWidth(1.0);
 	// painter->setBrush(QBrush());

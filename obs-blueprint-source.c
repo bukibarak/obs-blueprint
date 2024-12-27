@@ -62,7 +62,7 @@ static void obs_blueprint_source_destroy(void* data)
 
 static void obs_blueprint_source_draw(gs_texture_t* texture, gs_effect_t* effect)
 {
-	// TODO maybe improve this, I just copy-paste some things from win-capture/image-source render functions
+	// TODO: maybe improve this, I just copy-paste some things from win-capture/image-source render functions
 	const bool previous = gs_framebuffer_srgb_enabled();
 	gs_enable_framebuffer_srgb(true);
 

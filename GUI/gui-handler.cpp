@@ -1,5 +1,6 @@
 ﻿#include "gui-handler.h"
 
+#include <future>
 #include <iostream>
 #include <QApplication>
 #include <QScreen>
@@ -27,18 +28,21 @@ GUIHandler::~GUIHandler()
 {
 	obs_frontend_remove_event_callback(OBSEvent, this);
 	if (window != nullptr) {
-		GDebug("[GUI] Destroy OBS BP Main window using deleteLater() and lock");
+		GDebug("[GUI] Destroy OBS Graph window using deleteLater() and lock");
 		std::mutex mtx{};
 		std::unique_lock lock{mtx};
 		window->deleteLater();
-		cond.wait_for(lock, std::chrono::seconds(1));
+		auto status = cond.wait_for(lock, std::chrono::seconds(1));
+		if (status == std::cv_status::timeout) {
+			GError("[GUI] delete lock timeout! Graph will be deleted even if window is still active...");
+		}
 	}
 }
 
 void GUIHandler::OBSEvent(enum obs_frontend_event event, void *ptr)
 {
 	if (event == OBS_FRONTEND_EVENT_SCRIPTING_SHUTDOWN) {
-		GDebug("[GUI] Destroy OBS BP Main window using OBS Frontend API Event");
+		GDebug("[GUI] Destroy OBS Graph window using OBS Frontend API Event");
 		GUIHandler *handler = static_cast<GUIHandler *>(ptr);
 		delete handler->window;
 	}
@@ -47,7 +51,8 @@ void GUIHandler::OBSEvent(enum obs_frontend_event event, void *ptr)
 
 void GUIHandler::show() const
 {
-	// Hide default OBS properties window, TODO how to do it better? maybe even prevent properties window creation?
+	// Hide default OBS properties window,
+	// TODO: how to do it better? maybe even prevent properties window creation?
 	const QWindowList list = QApplication::topLevelWindows();
 
 	// Reverse list loop for better performance

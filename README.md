@@ -17,6 +17,7 @@ It's distributed under the GNU General Public License v2 (or any later version) 
  * The OpenCV module *highgui* is not used in OBS Blueprint and can be safely removed. I believe there are some other unused modules that are unused and could be disabled.
 > [!IMPORTANT]
 > If you want to build OBS Blueprint with CUDA (GPU), you must include OpenCV CUDA modules when building the libraries.
+> Do not forget to add the [NVIDIA Video Codec SDK](https://developer.nvidia.com/video-codec-sdk) to your OpenCV build configuration.
    
 * OBS Studio project: https://github.com/obsproject/obs-studio/ 
     * You can follow https://github.com/obsproject/obs-studio/wiki/build-instructions-for-windows instructions.
@@ -40,9 +41,9 @@ It's distributed under the GNU General Public License v2 (or any later version) 
 
 8. On the OBS Studio root directory, generate sln with CMake: `cmake --preset windows-x64`
 9. Open `build_x64\obs-studio.sln` with Microsoft Visual Studio or Jetbrains Rider (or any other IDE that support SLN solutions)
-10. With your IDE, open *obs-studio/plugins/obs-blueprint/obs-blueprint/opencv_conf.h* and change CUDA_AVAILABLE to 1 or 0 depending on if you want to build the plugin with GPU or CPU support.
-    * *nvcc and OpenCV CUDA modules are required to build OBS Blueprint with GPU support*
-11. Change the build configuration to `obs-studio`:
+<!-- 10. With your IDE, open *obs-studio/plugins/obs-blueprint/obs-blueprint/opencv_conf.h* and change CUDA_AVAILABLE to 1 or 0 depending on if you want to build the plugin with GPU or CPU support.
+    * *nvcc and OpenCV CUDA modules are required to build OBS Blueprint with GPU support* -->
+10. Change the build configuration to `obs-studio`:
 
 ![rider-build-select](./doc/images/rider-build-select.png)
 
