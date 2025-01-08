@@ -61,13 +61,25 @@ namespace FrameFormat {
 		{GS_BGRA, BGRA},
 	} ;
 
-	static const std::unordered_map<DShow::VideoFormat, ColorFormat> FromVideoFormat {
+	static const std::unordered_map<DShow::VideoFormat, ColorFormat> FromDShowFormat {
 		{DShow::VideoFormat::ARGB, RGBA},
 		{DShow::VideoFormat::NV12, NV12},
 		{DShow::VideoFormat::YV12, YV12},
 		{DShow::VideoFormat::YVYU, YVYU},
 		{DShow::VideoFormat::YUY2, YUY2},
 		{DShow::VideoFormat::UYVY, UYVY},
+	};
+
+	static const std::unordered_map<video_format, ColorFormat> FromVideoFormat {
+		{VIDEO_FORMAT_I420, YV12},
+		{VIDEO_FORMAT_NV12, NV12},
+		{VIDEO_FORMAT_YVYU, YVYU},
+		{VIDEO_FORMAT_YUY2, YUY2},
+		{VIDEO_FORMAT_UYVY, UYVY},
+		{VIDEO_FORMAT_RGBA, RGBA},
+		{VIDEO_FORMAT_BGRA, BGRA},
+		{VIDEO_FORMAT_Y800, GRAY},
+		{VIDEO_FORMAT_BGR3, BGR},
 	};
 }
 

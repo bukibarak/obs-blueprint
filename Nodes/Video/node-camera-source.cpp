@@ -91,7 +91,7 @@ inline bool NodeCameraSource::updateConfig()
 		GWarn("[NodeCameraSource] Failed to set video config for device '%ls'", devices[index].name.c_str());
 		return false;
 	}
-	if (FrameFormat::FromVideoFormat.find(videoConfig.format) == FrameFormat::FromVideoFormat.end()) {
+	if (FrameFormat::FromDShowFormat.find(videoConfig.format) == FrameFormat::FromDShowFormat.end()) {
 		GWarn("[NodeCameraSource] Unsupported Video format: %d", videoConfig.format);
 		return false;
 	}
@@ -115,7 +115,7 @@ void NodeCameraSource::onReactivate()
 void NodeCameraSource::onVideoData(const DShow::VideoConfig &config, unsigned char *data, size_t size,
 	long long startTime, long long endTime, long rotation)
 {
-	if (auto it = FrameFormat::FromVideoFormat.find(config.format); it != FrameFormat::FromVideoFormat.end()) {
+	if (auto it = FrameFormat::FromDShowFormat.find(config.format); it != FrameFormat::FromDShowFormat.end()) {
 		OBSFrame newFrame{config.cx, config.cy_abs, data, it->second};
 		setFrame(newFrame);
 	}

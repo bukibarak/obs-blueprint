@@ -36,10 +36,12 @@ target_link_libraries(
       PRIVATE OBS::libobs
               OBS::frontend-api
               OBS::libdshowcapture
+              OBS::media-playback
               Qt::Core
               Qt::Widgets
               strmiids # required by libdshowcapture
-              winmm) # required by libdshowcapture
+              winmm # required by libdshowcapture
+              FFmpeg::swscale) #required by media-playback
 
 # Copy OpenCV dll
 MACRO(COPY_DLL libname platform)
