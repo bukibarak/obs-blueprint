@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
+#include "Helpers/enum-to-string.h"
 #include "Helpers/global-logger.h"
 
 OBSGraphicsTypeField::OBSGraphicsTypeField(const FieldFormat &format,
@@ -177,7 +178,7 @@ QString OBSGraphicsTypeField::getValue() const
 		case COLOR_PIN:
 			return lineField->text();
 		default:
-			GWarn("Cannot get value of type %s as string, will return empty string...", PinName[fieldFormat.pinType]);
+			GWarn("Cannot get value of type %s as string, will return empty string...", EnumStr::PinType[fieldFormat.pinType]);
 		}
 	}
 	return {};

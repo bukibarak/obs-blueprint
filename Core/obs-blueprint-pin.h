@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "pin-type.h"
+#include "Helpers/enum-to-string.h"
 #include "Helpers/global-logger.h"
 #include "Structs/graphics-options.h"
 #include "Structs/multicast-delegate.h"
@@ -96,7 +97,7 @@ protected:
 	{
 		if(onDestructor) onDestructor();
 		else GWarn("Couldn't delete pin value ptr, possible memory leak!");
-		GInfo("%s '%s' destroyed", PinName[pinType], getDisplayName());
+		GInfo("%s '%s' destroyed", EnumStr::PinType[pinType], getDisplayName());
 	}
 
 	template<class T> void initializeValue(const T& defaultValue)
@@ -148,7 +149,7 @@ public:
 	{
 		OBSBlueprintOutputPin* pin = new OBSBlueprintOutputPin(type, parent, displayName);
 		pin->initializeValue(initialValue);
-		GInfo("Created and initialized output pin '%s' of type %s", displayName.c_str(), PinName[type]);
+		GInfo("Created and initialized output pin '%s' of type %s", displayName.c_str(), EnumStr::PinType[type]);
 		return pin;
 	}
 
@@ -193,7 +194,7 @@ public:
 	{
 		OBSBlueprintInputPin* pin = new OBSBlueprintInputPin(type, parent, displayName);
 		pin->initializeValue(initialValue);
-		GInfo("Created and initialized input pin '%s' of type %s", displayName.c_str(), PinName[type]);
+		GInfo("Created and initialized input pin '%s' of type %s", displayName.c_str(), EnumStr::PinType[type]);
 		return pin;
 	}
 
@@ -211,7 +212,7 @@ public:
 	{
 		OBSBlueprintInputPin* pin = new OBSBlueprintInputPin(type, parent, displayName);
 		pin->initializeValue(initialValue);
-		GInfo("Created and initialized graph input pin '%s' of type %s", displayName.c_str(), PinName[type]);
+		GInfo("Created and initialized graph input pin '%s' of type %s", displayName.c_str(), EnumStr::PinType[type]);
 		return pin;
 	}
 

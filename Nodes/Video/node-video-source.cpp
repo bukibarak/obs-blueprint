@@ -45,12 +45,14 @@ void NodeVideoSource::load()
 
 	mp_media_info updated;
 	updated.opaque = this;
+	updated.a_cb = nullptr;
 	updated.v_cb = OnVideoFrame;
 	updated.v_preload_cb = OnPreloadFrame;
 	updated.v_seek_cb = OnSeekFrame;
 	updated.stop_cb = OnVideoStopped;
 	updated.path = currFile.c_str();
 	updated.format = nullptr;
+	// updated.format = "BGRA"; // Not a FFMPEG input format... What is an FFMPEG input format ? https://ffmpeg.org/ffmpeg-formats.html#Description
 	updated.ffmpeg_options = nullptr;
 	updated.buffering = 2 * 1024 * 1024; // 2MiB
 	updated.speed = 100; // 1.0x
@@ -63,6 +65,7 @@ void NodeVideoSource::load()
 	updated.full_decode = false;
 	info = updated;
 	player = media_playback_create(&info);
+	media_playback_play(player, true, false);
 }
 
 void NodeVideoSource::unload()
@@ -81,21 +84,42 @@ void NodeVideoSource::convert( obs_source_frame * obsFrame)
 		return;
 	}
 
+	size_t total = 0;
+	for (int i = 0; i < MAX_AV_PLANES; i++) {
+		if (obsFrame->data[i] == nullptr)
+			break;
+		uint32_t divisor = obsFrame->width / obsFrame->linesize[i];
+		total += (obsFrame->width / divisor) * (obsFrame->height / divisor);
+	}
+	auto* data = new unsigned char[total];
+
+	size_t pos = 0;
+	for (int i = 0; i < MAX_AV_PLANES; i++) {
+		if (obsFrame->data[i] == nullptr)
+			break;
+
+		uint32_t divisor = obsFrame->width / obsFrame->linesize[i];
+		size_t size = (obsFrame->width / divisor) * (obsFrame->height / divisor);
+		memcpy(data + pos, obsFrame->data[i], size);
+		pos += size;
+	}
+
 	if (auto it = FrameFormat::FromVideoFormat.find(obsFrame->format); it != FrameFormat::FromVideoFormat.end()) {
-		OBSFrame newFrame{static_cast<int>(obsFrame->width), static_cast<int>(obsFrame->height), obsFrame->data[0], it->second};
+		OBSFrame newFrame{static_cast<int>(obsFrame->width), static_cast<int>(obsFrame->height), data, it->second};
 		frame = newFrame;
 		frameUpdated = true;
 	}
+	delete[] data;
 }
 
 void NodeVideoSource::OnVideoFrame(void *nodePtr, obs_source_frame *frame)
 {
-	GDebug("!!! Frame");
+	NodeVideoSource* node = static_cast<NodeVideoSource *>(nodePtr);
+	node->convert(frame);
 }
 
 void NodeVideoSource::OnPreloadFrame(void *nodePtr, obs_source_frame *frame)
 {
-	GDebug("! Preload");
 	NodeVideoSource* node = static_cast<NodeVideoSource *>(nodePtr);
 	node->convert(frame);
 }

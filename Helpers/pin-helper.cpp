@@ -114,7 +114,7 @@ void TypeConverter::FromString(OBSBlueprintPin *pin,
 		pin->setValue<uint32_t>(std::stoul(strValue, nullptr, 16));
 		break;
 	default:
-		GError("Unable to set pin value '%s' from string, undefined type %s", pin->getDisplayName(), PinName[type]);
+		GError("Unable to set pin value '%s' from string, undefined type %s", pin->getDisplayName(), EnumStr::PinType[type]);
 	}
 }
 
@@ -144,7 +144,7 @@ void TypeConverter::FromString(OBSBlueprintVariable *variable,
 		variable->setValue<uint32_t>(std::stoul(strValue, nullptr, 16));
 		break;
 	default:
-		GError("Unable to set variable value '%s' from string, undefined type %s", variable->getDisplayName(), PinName[type]);
+		GError("Unable to set variable value '%s' from string, undefined type %s", variable->getDisplayName(), EnumStr::PinType[type]);
 	}
 }
 

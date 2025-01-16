@@ -69,7 +69,7 @@ inline bool NodeCameraSource::setup()
 		GError("[NodeCameraSource] Failed to update capture video configuration");
 		return false;
 	}
-	if (!device.ConnectFilters()) { // TODO: What is this ? Necessary ?
+	if (!device.ConnectFilters()) { // TODO: What is this ? Necessary ? --> yes
 		GError("[NodeCameraSource] Failed to connect filters");
 		return false;
 	}

@@ -3,13 +3,13 @@
 #include "graphics/image-file.h"
 #include "Structs/obs-frame.h"
 
-
 class NodeImageSource : public OBSBlueprintNode {
 public:
 	NodeImageSource();
 	NodeImageSource(const std::string& defaultFile);
 	~NodeImageSource() override;
 
+	void onGraphBeginTick(float deltaSeconds) override;
 	void execute(float deltaSeconds) override;
 
 	static OBSBlueprintNode* CreateDefault() { return new NodeImageSource(); }
@@ -31,20 +31,13 @@ private:
 	std::vector<OBSFrame> imageFrames;
 	std::vector<uint32_t> imageDelayMs;
 
-	std::mutex mutex; // Prevent loading the same image multiple times if called by multiple threads
-	void unload();
-	void load();
+	std::thread* currentLoadThread = nullptr;
+	std::mutex mutex;
 
 	time_t getFileModifiedTime() const;
+	void unload();
+	void asyncLoad();
+	void load();
 
-	std::function<void()> onPathChanged = [this] {
-		if (loadPin->getValue<bool>()) {
-			const std::string& pinPath = pathPin->getValue<std::string>();
-			if (pinPath != filePath) {
-				filePath = pinPath; // TODO: add in mutex?
-				load();
-			}
-		}
-	};
-
+	void _internal_threadLoad();
 };

@@ -76,7 +76,7 @@ bool GUIVariablesWidget::tryRename(QListWidgetItem *item)
 
 	OBSBlueprintVariable* variable = variables[item];
 	bool ok;
-	QString title{"Rename " + QString(PinName[variable->getPinType()]) + " '" + QString(variable->getDisplayName()) + "'"};
+	QString title{"Rename " + QString(EnumStr::PinType[variable->getPinType()]) + " '" + QString(variable->getDisplayName()) + "'"};
 	QString text = QInputDialog::getText(this, title, "Variable name:", QLineEdit::Normal, variable->getDisplayName(), &ok);
 
 	if(ok && !text.isEmpty()) {
@@ -95,7 +95,7 @@ bool GUIVariablesWidget::tryDelete(QListWidgetItem *item)
 	bool ok = true;
 	if(ctx.graph->isVariableUsed(variable)) {
 		// TODO: maybe debug list of nodes that will be deleted (or at least amount of nodes)
-		QString label{"The variable '" + QString(variable->getDisplayName()) + "' (" + QString(PinName[variable->getPinType()]) + ") is still in use.\nDo you want to force delete it? All related nodes will be deleted too."};
+		QString label{"The variable '" + QString(variable->getDisplayName()) + "' (" + QString(EnumStr::PinType[variable->getPinType()]) + ") is still in use.\nDo you want to force delete it? All related nodes will be deleted too."};
 		QMessageBox::StandardButton response = QMessageBox::warning(this, "Variable in use!", label, QMessageBox::Yes | QMessageBox::No);
 		ok = response == QMessageBox::Yes;
 	}

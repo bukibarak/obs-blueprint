@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include "Core/obs-blueprint-node.h"
-#include "opencv-conf.h"
 #include "Structs/obs-frame.h"
 
 extern "C" {

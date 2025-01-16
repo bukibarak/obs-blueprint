@@ -24,7 +24,7 @@ OBSGraphicsVariableDetails::OBSGraphicsVariableDetails(GUIContext& context,
 	typeLayout->setAlignment(Qt::AlignLeft);
 	QLabel* typeLabel = new QLabel("Type:", this);
 	QLabel* typeIcon = new QLabel( this);
-	QLabel* typeName = new QLabel(QString(PinName[var->getPinType()]).split('_').at(0), this);
+	QLabel* typeName = new QLabel(QString(EnumStr::PinType[var->getPinType()]).split('_').at(0), this);
 	typeIcon->setPixmap(PinColors::GetPixmap(var->getPinType()));
 	typeLayout->addWidget(typeLabel);
 	typeLayout->addSpacing(3);

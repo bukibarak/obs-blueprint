@@ -35,7 +35,7 @@ NodeVariableGet::NodeVariableGet(OBSBlueprintVariable *linkedVariable)
 		pin = createOutputPin(COLOR_PIN, uint32_t(), "color");
 		break;
 	default:
-		GError("[GET %s] Couldn't create node pin because it is of type %s which is unsupported", variable->getDisplayName(), PinName[variable->getPinType()]);
+		GError("[GET %s] Couldn't create node pin because it is of type %s which is unsupported", variable->getDisplayName(), EnumStr::PinType[variable->getPinType()]);
 	}
 }
 
@@ -79,7 +79,7 @@ void NodeVariableGet::execute(float deltaSeconds)
 			pin->setValue(variable->getValue<uint32_t>());
 			break;
 		default:
-			GError("[GET %s] Couldn't copy variable value to pin because it is of type %s which is unsupported", variable->getDisplayName(), PinName[variable->getPinType()]);
+			GError("[GET %s] Couldn't copy variable value to pin because it is of type %s which is unsupported", variable->getDisplayName(), EnumStr::PinType[variable->getPinType()]);
 			return;
 		}
 		haveExecutedThisCycle = true;

@@ -11,23 +11,27 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 # Find Qt
 find_package(Qt6 REQUIRED Core Widgets)
 
-# Find all c/cpp files and add them to library
+# Find all c++ files within project directories
 file(GLOB_RECURSE obs-blueprint_SOURCES
-  "*.c",
-  "*.h",
-  "*.cpp"
+  LIST_DIRECTORIES false
+  "${CMAKE_CURRENT_SOURCE_DIR}/Core/*.h",
+  "${CMAKE_CURRENT_SOURCE_DIR}/Core/*.cpp",
+  "${CMAKE_CURRENT_SOURCE_DIR}/GUI/*.h",
+  "${CMAKE_CURRENT_SOURCE_DIR}/GUI/*.cpp",
+  "${CMAKE_CURRENT_SOURCE_DIR}/Helpers/*.h",
+  "${CMAKE_CURRENT_SOURCE_DIR}/Helpers/*.cpp",
+  "${CMAKE_CURRENT_SOURCE_DIR}/Nodes/*.h",
+  "${CMAKE_CURRENT_SOURCE_DIR}/Nodes/*.cpp",
+  "${CMAKE_CURRENT_SOURCE_DIR}/Structs/*.h",
+  "${CMAKE_CURRENT_SOURCE_DIR}/Structs/*.cpp",
 )
+
+# Append c files to variable
+list(APPEND obs-blueprint_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/obs-blueprint.c")
+list(APPEND obs-blueprint_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/obs-blueprint-source.c")
+
+
 add_library(obs-blueprint MODULE ${obs-blueprint_SOURCES})
-
-#if(NOT TARGET OBS::libdshowcapture)
-#  add_subdirectory("${CMAKE_SOURCE_DIR}/deps/libdshowcapture" libdshowcapture)
-#endif()
-
-#if(NOT TARGET OBS::winhandle)
-#  add_subdirectory("${CMAKE_SOURCE_DIR}/libobs" "${CMAKE_BINARY_DIR}/libobs")
-#endif()
-
-# set(obs-blueprint_SOURCES ${obs-blueprint_SRC})
 
 # link dependencies libraries with obs-blueprint plugin
 target_link_libraries(obs-blueprint PRIVATE ${OpenCV_LIBS})
@@ -64,6 +68,7 @@ MACRO(COPY_DLL libname platform)
         )
     endif()
 ENDMACRO(COPY_DLL)
+
 COPY_DLL(opencv_world4110 ALL)
 COPY_DLL(opencv_world4110d DEBUG)
 

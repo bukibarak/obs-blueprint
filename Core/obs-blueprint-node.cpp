@@ -2,6 +2,7 @@
 
 #include "obs-blueprint-connector.h"
 #include "obs-blueprint-graph.h"
+#include "Helpers/enum-to-string.h"
 #include "Helpers/global-logger.h"
 
 OBSBlueprintNode::OBSBlueprintNode(std::string name): displayName(std::move(name))
@@ -93,11 +94,11 @@ std::vector<OBSBlueprintConnector*> OBSBlueprintNode::getAllConnectors() const
 void OBSBlueprintNode::addInputPin(OBSBlueprintInputPin *inputPin)
 {
 	inputPins.push_back(inputPin);
-	GInfo("[%s] Input %s '%s' added to node", getDisplayName(), PinName[inputPin->getPinType()], inputPin->getDisplayName());
+	GInfo("[%s] Input %s '%s' added to node", getDisplayName(), EnumStr::PinType[inputPin->getPinType()], inputPin->getDisplayName());
 }
 
 void OBSBlueprintNode::addOutputPin(OBSBlueprintOutputPin *outputPin)
 {
 	outputPins.push_back(outputPin);
-	GInfo("[%s] Output %s '%s' added to node", getDisplayName(), PinName[outputPin->getPinType()], outputPin->getDisplayName());
+	GInfo("[%s] Output %s '%s' added to node", getDisplayName(), EnumStr::PinType[outputPin->getPinType()], outputPin->getDisplayName());
 }

@@ -6,7 +6,7 @@
  *
  * All PinType have a corresponding type. Please see \c PinConverter for more details.
  */
-enum PinType {
+enum PinType : unsigned char {
 	UNKNOWN_PIN,
 	AUDIOVIDEO_PIN,		// ??? TODO
 	AUDIO_PIN,			// ??? TODO
@@ -20,22 +20,6 @@ enum PinType {
 	STRING_PIN,			// std::string
 	COLOR_PIN,			// uint32_t
 	ANY_PIN, // Used by context menu to filter
-};
-
-constexpr const char* PinName[] = {
-	"UNKNOWN_PIN",
-	"AUDIOVIDEO_PIN",
-	"AUDIO_PIN",
-	"VIDEO_PIN",
-	"EXECUTION_PIN",
-	"BOOLEAN_PIN",
-	"BYTE_PIN",
-	"INT_PIN",
-	"FLOAT_PIN",
-	"CHAR_PIN",
-	"STRING_PIN",
-	"COLOR_PIN",
-	"ANY_PIN",
 };
 
 

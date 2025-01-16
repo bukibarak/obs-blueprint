@@ -10,6 +10,7 @@
 #include "Nodes/node-temp-test.h"
 #include "Nodes/Numbers/Float/node-float-abs.h"
 #include "Nodes/Video/node-image-souce.h"
+#include "Nodes/Video/node-video-source.h"
 #include "Structs/obs-frame.h"
 
 extern "C" {
@@ -33,6 +34,12 @@ extern "C" {
 
 		NodeImageSource* imageSourceNode = new NodeImageSource("C:/temp/q.gif");
 		addNode(imageSourceNode);
+
+		NodeVideoSource* video = new NodeVideoSource("C:/temp/v.mp4");
+		addNode(video);
+		createConnector(video->getOutputPins()[0], mainVideoInput);
+
+		NodeTempTest* tempTestNode = new NodeTempTest();
 
 		//createConnector(imageSourceNode->getOutputPins()[0], mainVideoInput);
 
@@ -204,8 +211,8 @@ OBSBlueprintConnector* OBSBlueprintGraph::createConnector(OBSBlueprintOutputPin 
 	if(from->getPinType() != to->getPinType()) {
 #if DEBUG
 		GError("Output pin '%s [%s]' of type %s does not match input pin '%s [%s]' type %s... Abort!",
-			from->getDisplayName(), fromParentName, PinName[from->getPinType()],
-			to->getDisplayName(), toParentName, PinName[to->getPinType()]
+			from->getDisplayName(), fromParentName, EnumStr::PinType[from->getPinType()],
+			to->getDisplayName(), toParentName, EnumStr::PinType[to->getPinType()]
 		);
 #endif
 		return nullptr;
@@ -234,9 +241,8 @@ void OBSBlueprintGraph::deleteConnector(OBSBlueprintConnector *connector)
 		return;
 	}
 
-	if(connector->getToPin() == mainVideoInput) mainVideoInput->setValue(OBSFrame::EmptyFrame);
-
 	mutex.lock();
+	if(connector->getToPin() == mainVideoInput) mainVideoInput->setValue(OBSFrame::EmptyFrame);
 	graphConnectors.remove(connector);
 	delete connector;
 	mutex.unlock();

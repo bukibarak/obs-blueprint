@@ -1,17 +1,13 @@
 ﻿#include "node-image-souce.h"
 
 #include <fstream>
-
 #include "util/platform.h"
-#include "util/threading-windows.h"
 
 NodeImageSource::NodeImageSource() : OBSBlueprintNode(obs_module_text("NodeImageSource"))
 {
 	pathPin = createInputPin(STRING_PIN, std::string(), "Path");
 	loadPin = createInputPin(BOOLEAN_PIN, true, "Direct load");
 	videoPin = createOutputPin(VIDEO_PIN, OBSFrame::EmptyFrame, "Video");
-
-	pathPin->onValueChanged += onPathChanged;
 
 	// TODO: ADD EXECUTION PIN TO RESTART GIF
 }
@@ -25,8 +21,18 @@ NodeImageSource::NodeImageSource(const std::string &defaultFile) : NodeImageSour
 
 NodeImageSource::~NodeImageSource()
 {
+	mutex.lock();
+	delete currentLoadThread;
 	unload();
-	pathPin->onValueChanged -= onPathChanged; // Unnecessary, pin callbacks will be deleted by parent destructor no matter what
+	mutex.unlock();
+}
+
+void NodeImageSource::onGraphBeginTick(float deltaSeconds)
+{
+	if (loadPin->getValue<bool>() && pathPin->getValue<std::string>() != filePath) {
+		filePath = pathPin->getValue<std::string>();
+		asyncLoad();
+	}
 }
 
 void NodeImageSource::execute(float deltaSeconds)
@@ -34,8 +40,7 @@ void NodeImageSource::execute(float deltaSeconds)
 	// 1. Check if path have changed and reload image if so
 	if(pathPin->getValue<std::string>() != filePath) {
 		filePath = pathPin->getValue<std::string>();
-		load();
-		haveExecutedThisCycle = true;
+		asyncLoad();
 	}
 
 	// 2. Check if image modified time have changed and reload image if so
@@ -45,46 +50,59 @@ void NodeImageSource::execute(float deltaSeconds)
 
 		checkModifiedCounter = 0.0f;
 		if(fileModifiedTime != t) {
-			load();
+			asyncLoad();
 			haveExecutedThisCycle = true;
 		}
 	}
 
-	if (imageFrames.empty()) { // 3. Check if image have frames and return empty frame if not
-		if (!videoPin->getValue<OBSFrame>().empty()) {
-			videoPin->setValue(OBSFrame::EmptyFrame);
-			haveExecutedThisCycle = true;
+	// Use mutex to prevent executing code below while new image is beeing loaded, use try_lock to prevent freezing main tick thread
+	if (mutex.try_lock()) {
+		if (imageFrames.empty()) { // 3. Check if image have frames and return empty frame if not
+			if (!videoPin->getValue<OBSFrame>().empty()) {
+				videoPin->setValue(OBSFrame::EmptyFrame);
+				haveExecutedThisCycle = true;
+			}
 		}
-	}
-	else if (imageFrameCurrIndex == SIZE_MAX) { // 4. Check if image index is undefined and set it to 0 if true
-		//videoPin->setValue(imageFrames.front()); // NOT NEEDED because video pin will be set at the end of load() function
-		imageFrameCurrIndex = 0;
-	}
-	else if (imageFrames.size() > 1) { // 5. If image is a gif, update frame if necessary
-		gifFrameSec += deltaSeconds;
-		while (gifFrameSec > gifFrameLimit)
-			gifFrameSec -= gifFrameLimit;
+		else if (imageFrameCurrIndex == SIZE_MAX) { // 4. Check if image index is undefined and set it to 0 if true
+			//videoPin->setValue(imageFrames.front()); // NOT NEEDED because video pin will be set at the end of load() function
+			imageFrameCurrIndex = 0; // TODO: why is that already??
+		}
+		else if (imageFrames.size() > 1) { // 5. If image is a gif, update frame if necessary
 
-		float timeIndex = 0.0f;
-		size_t index = -1;
-		while (timeIndex < gifFrameSec) {
-			++index;
-			timeIndex += imageDelayMs[index] / 1000.0f;
-		}
+			gifFrameSec += deltaSeconds;
+			while (gifFrameSec > gifFrameLimit)
+				gifFrameSec -= gifFrameLimit;
 
-		if (index != imageFrameCurrIndex) {
-			imageFrameCurrIndex = index;
-			videoPin->setValue(imageFrames[index]);
-			videoPin->getValuePtr<OBSFrame>()->updated = true;
-			haveExecutedThisCycle = true;
+			float timeIndex = 0.0f;
+			size_t index = -1;
+			while (timeIndex < gifFrameSec) {
+				++index;
+				timeIndex += imageDelayMs[index] / 1000.0f;
+			}
+
+			if (index != imageFrameCurrIndex) {
+				imageFrameCurrIndex = index;
+				videoPin->setValue(imageFrames[index]);
+				videoPin->getValuePtr<OBSFrame>()->updated = true;
+				haveExecutedThisCycle = true;
+			}
+			else {
+				videoPin->getValuePtr<OBSFrame>()->updated = false;
+			}
 		}
-		else {
+		else { // 6. If image is static, do nothing
 			videoPin->getValuePtr<OBSFrame>()->updated = false;
 		}
+		mutex.unlock();
 	}
-	else { // 6. If image is static, do nothing
-		videoPin->getValuePtr<OBSFrame>()->updated = false;
-	}
+}
+
+time_t NodeImageSource::getFileModifiedTime() const
+{
+	struct stat stat;
+	if(os_stat(filePath.c_str(), &stat) != 0)
+		return -1;
+	return stat.st_mtime;
 }
 
 void NodeImageSource::unload()
@@ -96,34 +114,39 @@ void NodeImageSource::unload()
 	imageDelayMs.clear();
 }
 
+void NodeImageSource::asyncLoad()
+{
+	mutex.lock();
+	if (currentLoadThread != nullptr)
+		currentLoadThread->join();
+	mutex.unlock();
+
+	currentLoadThread = new std::thread(&NodeImageSource::_internal_threadLoad, this);
+	currentLoadThread->detach(); // TODO: necessary ?
+}
 
 void NodeImageSource::load()
 {
-	if (mutex.try_lock()) {
-		unload();
-		if(filePath.empty()) {
-			GWarn("[NodeImageSource] no file path provided");
-			mutex.unlock();
-			return;
-		}
-		if(!std::ifstream(filePath).good()) {
-			GWarn("[NodeImageSource] Couldn't open file at %s", filePath.c_str());
-			mutex.unlock();
-			return;
-		}
+	unload();
+	if(filePath.empty()) {
+		GWarn("[NodeImageSource] no file path provided");
+		return;
+	}
+	if(!std::ifstream(filePath).good()) {
+		GWarn("[NodeImageSource] Couldn't open file at %s", filePath.c_str());
+		return;
+	}
 
-		fileModifiedTime = getFileModifiedTime();
-		gs_image_file_t image;
-		gs_image_file_init(&image, filePath.c_str());
-		if (image.format != GS_RGBA && image.format != GS_BGRA) {
-			GWarn("[NodeImageSource] Unsupported image format: %d", image.format);
-			obs_enter_graphics();
-			gs_image_file_free(&image);
-			obs_leave_graphics();
-			mutex.unlock();
-			return;
-		}
-
+	fileModifiedTime = getFileModifiedTime();
+	gs_image_file_t image;
+	gs_image_file_init(&image, filePath.c_str());
+	if (auto it = FrameFormat::FromGsColorFormat.find(image.format); it == FrameFormat::FromGsColorFormat.end()) {
+		GWarn("[NodeImageSource] Unsupported image format: %s", EnumStr::gs_color_format[image.format]);
+		obs_enter_graphics();
+		gs_image_file_free(&image);
+		obs_leave_graphics();
+	}
+	else {
 		if (image.is_animated_gif) {
 			uint64_t timeNs = 0;
 			for (uint32_t i = 0; i < image.gif.frame_count; i++) {
@@ -131,13 +154,12 @@ void NodeImageSource::load()
 				uint32_t frame_delay = gifFrame.frame_delay == 0 ? 10 : gifFrame.frame_delay;
 				uint64_t frameNs = frame_delay * 10000000ULL;
 				timeNs += frameNs;
-				bool updated = gs_image_file_tick(&image, frameNs + 1);
-				if (updated) {
+				if (gs_image_file_tick(&image, frameNs + 1)) {
 					imageFrames.push_back({
 						static_cast<int>(image.cx),
 						static_cast<int>(image.cy),
 						image.animation_frame_cache[image.cur_frame],
-						FrameFormat::FromGsColorFormat.at(image.format)
+						it->second
 					});
 					frame_delay = image.gif.frames[image.cur_frame].frame_delay == 0 ? 10 : image.gif.frames[image.cur_frame].frame_delay;
 					imageDelayMs.push_back(frame_delay * 10);
@@ -154,7 +176,7 @@ void NodeImageSource::load()
 				static_cast<int>(image.cx),
 				static_cast<int>(image.cy),
 				image.texture_data,
-				FrameFormat::FromGsColorFormat.at(image.format)});
+				it->second});
 		}
 
 		obs_enter_graphics();
@@ -163,14 +185,13 @@ void NodeImageSource::load()
 
 		videoPin->setValue(imageFrames.empty() ? OBSFrame::EmptyFrame : imageFrames.front()); // TODO: move to execute ?
 		GInfo("[NodeImageSource] image loaded (%s)", filePath.c_str());
-		mutex.unlock();
 	}
 }
 
-time_t NodeImageSource::getFileModifiedTime() const
+void NodeImageSource::_internal_threadLoad()
 {
-	struct stat stat;
-	if(os_stat(filePath.c_str(), &stat) != 0)
-		return -1;
-	return stat.st_mtime;
+	mutex.lock();
+	load();
+	currentLoadThread = nullptr;
+	mutex.unlock();
 }

@@ -2,6 +2,8 @@
 #include "pin-type.h"
 #include <functional>
 #include <string>
+
+#include "Helpers/enum-to-string.h"
 #include "Helpers/global-logger.h"
 #include "Structs/multicast-delegate.h"
 
@@ -21,7 +23,7 @@ public:
 		OBSBlueprintVariable* variable = new OBSBlueprintVariable(name);
 		variable->init<T>(pinType);
 #if DEBUG
-		GInfo("Created new variable '%s' of type [%s]", name, PinName[pinType]);
+		GInfo("Created new variable '%s' of type [%s]", name, EnumStr::PinType[pinType]);
 #endif
 		return variable;
 	}
@@ -30,7 +32,7 @@ public:
 	{
 		if(onDestructor) onDestructor();
 		else GWarn("Couldn't delete variable value ptr, possible memory leak!");
-		GInfo("Variable '%s' [%s] deleted!", displayName.c_str(), PinName[pinType]);
+		GInfo("Variable '%s' [%s] deleted!", displayName.c_str(), EnumStr::PinType[pinType]);
 	}
 
 	const PinType& getPinType() const {return pinType;}
@@ -40,7 +42,7 @@ public:
 
 	void setDisplayName(const std::string& name)
 	{
-		GInfo("Variable '%s' of type %s was renamed to '%s'", getDisplayName(), PinName[getPinType()], name.c_str());
+		GInfo("Variable '%s' of type %s was renamed to '%s'", getDisplayName(), EnumStr::PinType[getPinType()], name.c_str());
 		const std::string& old = name;
 		displayName = name;
 		onRename.execute(old, name);
