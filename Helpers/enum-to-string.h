@@ -4,6 +4,10 @@
 #include "Core/pin-type.h"
 #include "Core/frame-format.h"
 
+/**
+ * Contains all strings (as <c>const char*</c>) for enumerations names.
+ * TODO: Use Magic Enum instead ? https://github.com/Neargye/magic_enum --> require C++17
+ */
 namespace EnumStr {
 
 inline std::unordered_map<FrameFormat::PixelFormat, const char*> PixelFormat = {

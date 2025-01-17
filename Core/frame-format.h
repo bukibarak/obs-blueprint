@@ -8,6 +8,7 @@
 
 namespace FrameFormat {
 	enum PixelFormat : uint8_t {
+		// TODO: Test all, try to convert in obs-frame.cpp if not
 		BGRA,	// OK (default, raw)
 		BGR,	// NOT TESTED
 		RGB,	// NOT TESTED

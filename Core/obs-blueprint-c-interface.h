@@ -4,7 +4,6 @@
 extern "C" {
 #endif
 
-	struct pixel;
 	typedef void* CPP_BlueprintGraphPtr;
 
 
@@ -12,7 +11,7 @@ extern "C" {
 	void c_blueprint_graph_destroy(CPP_BlueprintGraphPtr);
 	void c_blueprint_graph_properties_click(CPP_BlueprintGraphPtr);
 	void c_blueprint_graph_tick(CPP_BlueprintGraphPtr, float);
-	struct pixel* c_blueprint_graph_get_pixels(CPP_BlueprintGraphPtr);
+	unsigned char* c_blueprint_graph_get_pixels(CPP_BlueprintGraphPtr);
 	unsigned int c_blueprint_graph_get_width(CPP_BlueprintGraphPtr);
 	unsigned int c_blueprint_graph_get_height(CPP_BlueprintGraphPtr);
 

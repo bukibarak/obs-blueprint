@@ -1,39 +1,8 @@
 ﻿#pragma once
-#include <obs-module.h>
+#include <obs-module.h> // Keep this, otherwise you need to include it to all child nodes (in order to use obs_module_text())
 
 #include "obs-blueprint-pin.h"
-#include "Structs/multicast-delegate.h"
-
-class OBSBlueprintConnector;
-
-template<class T>
-class NodeFactory {
-public:
-	static OBSBlueprintNode* Create() { return T::CreateDefault(); }
-	static std::vector<PinType> Inputs() { return T::InputPins(); }
-	static std::vector<PinType> Outputs() { return T::OutputPins(); }
-};
-
-
-struct NodeContextInfo {
-public:
-	std::function<OBSBlueprintNode*()> create;
-	std::vector<PinType> inputPins;
-	std::vector<PinType> outputPins;
-
-	template<class T> static NodeContextInfo GetDefaults()
-	{
-		NodeContextInfo nci;
-		nci.create = []{return NodeFactory<T>::Create();};
-		nci.inputPins = NodeFactory<T>::Inputs();
-		nci.outputPins = NodeFactory<T>::Outputs();
-		return nci;
-	}
-
-private:
-	NodeContextInfo() = default;
-
-};
+#include "Helpers/obs-blueprint-factory.h"
 
 /**
  * Base class for \c OBSBlueprintNode . This class should never be used directly, only child classes.

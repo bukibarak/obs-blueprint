@@ -3,12 +3,14 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
+#include "Core/obs-blueprint-variable.h"
 #include "GUI/obs-graphics-main-window.h"
 #include "GUI/obs-graphics-type-field.h"
 #include "GUI/obs-graphics-view.h"
+#include "Helpers/enum-to-string.h"
 
 OBSGraphicsVariableDetails::OBSGraphicsVariableDetails(GUIContext& context,
-	QWidget *parent) : QWidget(parent), ctx(context), var(context.selectedVariable)
+                                                       QWidget *parent) : QWidget(parent), ctx(context), var(context.selectedVariable)
 {
 	QVBoxLayout *layout = new QVBoxLayout(this);
 

@@ -2,6 +2,7 @@
 #include <QLabel>
 #include <QMutex>
 
+#include "Core/obs-blueprint-pin.h"
 #include "GUI/obs-graphics-type-field.h"
 #include "Helpers/pin-helper.h"
 

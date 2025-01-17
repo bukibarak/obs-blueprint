@@ -4,15 +4,18 @@
 #include "obs-blueprint-connector.h"
 #include "obs-blueprint-variable.h"
 #include "GUI/gui-handler.h"
+#include "Helpers/obs-blueprint-factory.h"
 #include "Nodes/Video/node-color-source.h"
 #include "Nodes/Numbers/Float/node-float-to-int.h"
 #include "Nodes/Waves/node-sinus-time.h"
 #include "Nodes/node-temp-test.h"
 #include "Nodes/Numbers/Float/node-float-abs.h"
 #include "Nodes/Video/node-image-souce.h"
+#include "Nodes/Video/node-image-source2.h"
 #include "Nodes/Video/node-video-source.h"
 #include "Structs/obs-frame.h"
 
+// TODO: Is 'extern "C" {}' needed here ? Not sure...
 extern "C" {
 	OBSBlueprintGraph::OBSBlueprintGraph()
 	{
@@ -20,37 +23,38 @@ extern "C" {
 		GDebug("======== Begin graph creation ========");
 		mainVideoInput = OBSBlueprintInputPin::CreateAndInitialize(VIDEO_PIN, this, OBSFrame::EmptyFrame, "Main Video");
 
-		NodeSinusTime* sinusTimeNode = new NodeSinusTime(2.0f, 800.0f);
+		OBSBlueprintNode* sinusTimeNode = OBSBlueprintFactory::CreateNode<NodeSinusTime>();
 		addNode(sinusTimeNode);
 
-		NodeFloatAbs* absNode = new NodeFloatAbs();
+		OBSBlueprintNode* absNode = OBSBlueprintFactory::CreateNode<NodeFloatAbs>();
 		addNode(absNode);
 
-		NodeFloatToInt* floatToIntNode = new NodeFloatToInt();
+		OBSBlueprintNode* floatToIntNode = OBSBlueprintFactory::CreateNode<NodeFloatToInt>();
 		addNode(floatToIntNode);
 
 		NodeColorSource* colorSourceNode = new NodeColorSource(1920, 1080,0x80FF0000);
 		addNode(colorSourceNode);
 
-		NodeImageSource* imageSourceNode = new NodeImageSource("C:/temp/q.gif");
+		NodeImageSource2* imageSourceNode = new NodeImageSource2("C:/temp/testgif.gif");
 		addNode(imageSourceNode);
 
 		NodeVideoSource* video = new NodeVideoSource("C:/temp/v.mp4");
 		addNode(video);
-		createConnector(video->getOutputPins()[0], mainVideoInput);
+		//createConnector(video->getOutputPins()[0], mainVideoInput);
 
-		NodeTempTest* tempTestNode = new NodeTempTest();
+		OBSBlueprintNode* test = new NodeTempTest();
+		addNode(test);
 
-		//createConnector(imageSourceNode->getOutputPins()[0], mainVideoInput);
+		createConnector(imageSourceNode->getOutputPins()[0], mainVideoInput);
 
-		OBSBlueprintVariable* v1 = OBSBlueprintVariable::CreateVariable<float>(FLOAT_PIN, "My float variable");
+		OBSBlueprintVariable* v1 = OBSBlueprintFactory::CreateFloatVariable("My float variable");
 		v1->setValue(100.0f);
 		addVariable(v1);
 
-		OBSBlueprintVariable* v2 = OBSBlueprintVariable::CreateVariable<bool>(BOOLEAN_PIN, "My bool variable");
+		OBSBlueprintVariable* v2 = OBSBlueprintFactory::CreateBooleanVariable("My bool variable");
 		addVariable(v2);
 
-		OBSBlueprintVariable* v3 = OBSBlueprintVariable::CreateVariable<OBSFrame>(VIDEO_PIN, "My video variable");
+		OBSBlueprintVariable* v3 = OBSBlueprintFactory::CreateVideoVariable("My video variable");
 		addVariable(v3);
 
 		GDebug("=========== Graph created! ===========\n\n");
@@ -146,15 +150,9 @@ extern "C" {
 		// GInfo("Graph main video is %ux%u", mainVideoInput->getValuePtr<video_frame>()->width, mainVideoInput->getValuePtr<video_frame>()->height);
 	}
 
-	pixel * OBSBlueprintGraph::getRenderPixels() const
+	uint8_t * OBSBlueprintGraph::getRenderPixels() const
 	{
-		if (pixels.empty())
-			return nullptr;
-
-		pixel* pixelsData = reinterpret_cast<pixel*>(pixels.data);
-		if(pixelsData == nullptr && (pixels.cols > 0 || pixels.rows > 0))
-			GError("No frame found in graph main video pin! OBS will probably crash...");
-		return pixelsData;
+		return pixels.data;
 	}
 
 	uint32_t OBSBlueprintGraph::getWidth() const

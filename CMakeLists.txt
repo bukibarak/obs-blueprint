@@ -27,8 +27,11 @@ file(GLOB_RECURSE obs-blueprint_SOURCES
 )
 
 # Append c files to variable
+list(APPEND obs-blueprint_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-err2str.h")
+list(APPEND obs-blueprint_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-err2str.c")
 list(APPEND obs-blueprint_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/obs-blueprint.c")
 list(APPEND obs-blueprint_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/obs-blueprint-source.c")
+
 
 
 add_library(obs-blueprint MODULE ${obs-blueprint_SOURCES})

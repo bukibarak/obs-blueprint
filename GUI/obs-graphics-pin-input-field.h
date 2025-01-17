@@ -2,6 +2,7 @@
 #include <QGraphicsProxyWidget>
 #include <QMutex>
 
+#include "obs-graphics-pin.h"
 #include "obs-graphics-type-field.h"
 #include "Helpers/pin-helper.h"
 

@@ -1,66 +1,66 @@
 ﻿#pragma once
 
 #include "Core/frame-format.h"
-#include "Helpers/enum-to-string.h"
-#include "Helpers/global-logger.h"
-
 
 /**
  * Video frame structure, containing the screen pixels matrix.\n
+ * <b>For compatibility between nodes, all frames are converted to BGRA (ARGB) pixel format!</b> \n\n
  * Used with pin of type \c VIDEO_PIN
  * @see PinType.
  */
 struct OBSFrame {
 
-	OBSFrame() : mat(0, 0, CV_8UC4) {}
+	/**
+	 * Create a new empty frame. \n\n
+	 * \b NOTE: It is recommended to use \c OBSFrame::EmptyFrame instead.
+	 */
+	OBSFrame();
+
 	//OBSFrame(const cv::UMat& mat) : mat(mat) { GDebug("OBS Frame COPY constructor");}
-	OBSFrame(cv::UMat mat) : mat(std::move(mat)) {}
 
-	OBSFrame(int width, int height, uint8_t* data, FrameFormat::PixelFormat format) : mat(height, width, CV_8UC4)
-	{
-		if (format == FrameFormat::BGRA) {
-			cv::Mat(height, width, FrameFormat::Type.at(format), data).copyTo(mat);
-		}
-		else if (auto it = FrameFormat::Converter.find(format); it != FrameFormat::Converter.end()) {
-			cv::UMat raw;
-			cv::Mat temp{(is_yuv(format) ? (3*height) / 2 : height), width, FrameFormat::Type.at(format), data};
-			//cv::Mat TESTONLY(height, width, CV_8UC4);
-			//cv::cvtColor(temp, TESTONLY, it->second); // Used to view variable as image with Rider debugger
-			temp.copyTo(raw);
-			cv::cvtColor(raw, mat, it->second);
-		}
-		else {
-			GError("Unsupported frame format: %s. Frame will be empty", EnumStr::PixelFormat[format]);
-		}
-	}
+	/**
+	 * Create a new frame from an existing \c UMat \n
+	 * Used with node that perform pixel matrix operations, i.e.: \c NodeVideoLayer
+	 * @see cv::UMat
+	 * @param mat The pixel matrix. <b>MUST be in BGRA (ARGB) pixel format!</b>
+	 */
+	OBSFrame(cv::UMat mat);
 
-	bool empty() const { return mat.empty(); }
-	const int& width() const { return mat.cols; }
-	const int& height() const { return mat.rows; }
+	/**
+	 * Create a new frame from existing data.\n
+	 * Frame data will be automatically converted to BGRA (ARGB) pixel format.
+	 * @param width Frame width (in pixels)
+	 * @param height Frame height (in pixels)
+	 * @param data Frame data, continuous/packed
+	 * @param format Input data format. If not BGRA (ARGB), will be converted using \c cv::cvtColor
+	 */
+	OBSFrame(int width, int height, uint8_t* data, FrameFormat::PixelFormat format);
 
-	const cv::UMat& UMat() const {return mat;}
-	cv::Mat getMat() const { return mat.empty() ? cv::Mat(0, 0, CV_8UC4) : mat.getMat(cv::ACCESS_READ); }
+	bool empty() const;
+	const int& width() const;
+	const int& height() const;
 
+	/**
+	 * Get the \c UMat related to this frame. \n
+	 * \b Warning: data may be stored on GPU RAM.
+	 * @return The frame \c cv::UMat related
+	 */
+	const cv::UMat& UMat() const;
+
+	/**
+	 * Convert the \c UMat into a \c Mat with data stored on CPU RAM.
+	 * @return The converted \c cv::UMat related
+	 */
+	cv::Mat getMat() const;
+
+	/** Indicate if the frame was updated since last tick. Useful for performance improvement. */
 	bool updated = true;
 
+	/** A frame containing no data. */
 	static const OBSFrame EmptyFrame;
 
 private:
-	cv::UMat mat;
+	cv::UMat umat;
 
-	static bool is_yuv(FrameFormat::PixelFormat format)
-	{
-		switch (format) {
-			case FrameFormat::NV12:
-			case FrameFormat::YV12:
-			case FrameFormat::NV21:
-			case FrameFormat::IYUV:
-			case FrameFormat::UYVY:
-			case FrameFormat::YUY2:
-			case FrameFormat::YVYU:
-				return true;
-			default:
-				return false;
-		}
-	}
+	static bool isYUV(const FrameFormat::PixelFormat& format);
 };

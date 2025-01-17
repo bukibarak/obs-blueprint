@@ -3,6 +3,7 @@
 
 /**
  * Pixel structure. Can also be used for Colors.
+ * TODO: Old, remove all occurrences (maybe only keep ColorToPixel/PixelToColor)
  */
 struct pixel {
 	uint8_t b;
@@ -10,9 +11,9 @@ struct pixel {
 	uint8_t r;
 	uint8_t a;
 
-	pixel() : b(0), g(0), r(0), a(0) {}
-	pixel(uint8_t r, uint8_t g, uint8_t b) : b(b), g(g), r(r), a(UINT8_MAX) {}
-	pixel(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : b(b), g(g), r(r), a(a) {}
+	// pixel() : b(0), g(0), r(0), a(0) {}
+	// pixel(uint8_t r, uint8_t g, uint8_t b) : b(b), g(g), r(r), a(UINT8_MAX) {}
+	// pixel(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : b(b), g(g), r(r), a(a) {}
 
 	static pixel ColorToPixel(uint32_t color)
 	{

@@ -7,9 +7,29 @@
 #include "Nodes/Numbers/Int/node-int-to-float.h"
 #include "Nodes/Video/node-camera-source.h"
 #include "Nodes/Video/node-image-souce.h"
+#include "Nodes/Video/node-image-source2.h"
 #include "Nodes/Video/node-video-source.h"
 #include "Nodes/Video/Transforms/node-video-layer.h"
 #include "Nodes/Video/Utilities/node-video-break.h"
+
+struct NodeContextInfo {
+	std::function<OBSBlueprintNode*()> create;
+	std::vector<PinType> inputPins;
+	std::vector<PinType> outputPins;
+
+	template<class T> static NodeContextInfo GetDefaults()
+	{
+		NodeContextInfo nci;
+		nci.create = []{return NodeFactory<T>::Create();};
+		nci.inputPins = NodeFactory<T>::Inputs();
+		nci.outputPins = NodeFactory<T>::Outputs();
+		return nci;
+	}
+
+private:
+	NodeContextInfo() = default;
+
+};
 
 struct ContextMenuEntry {
 	QString displayText;
@@ -122,7 +142,7 @@ private:
 
 	inline static std::vector<ContextMenuEntry> entries{
 		ContextMenuEntry::Add<NodeColorSource>("Color source"),
-		ContextMenuEntry::Add<NodeImageSource>("Image source"),
+		ContextMenuEntry::Add<NodeImageSource2>("Image source"),
 		ContextMenuEntry::Add<NodeVideoSource>("Video source"),
 		ContextMenuEntry::Add<NodeCameraSource>("Camera source"),
 		ContextMenuEntry::Add<NodeFloatAbs>("Absolute value (float)", "/Numbers/Float"),

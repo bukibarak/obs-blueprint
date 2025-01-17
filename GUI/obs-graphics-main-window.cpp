@@ -28,8 +28,8 @@ OBSGraphicsMainWindow::OBSGraphicsMainWindow(OBSBlueprintGraph *g, QWidget *pare
 	splitter->addWidget(varWidget);
 	splitter->addWidget(view);
 	splitter->addWidget(detailsWidget);
-	varWidget->resize(750, varWidget->height());
-	detailsWidget->resize(1000, detailsWidget->height());
+	varWidget->resize(500, varWidget->height());
+	detailsWidget->resize(750, detailsWidget->height());
 
 	layout = new QHBoxLayout(this);
 	layout->setSpacing(0);

@@ -9,9 +9,9 @@
  */
 template <class T>
 struct multicastDelegate {
-public:
 
 	// Prevent assignment operator and copy/move constructor
+	// TODO: does it really prevent it ? :thinking:
 	multicastDelegate& operator=(const multicastDelegate<T> &) = delete;
 	multicastDelegate(const multicastDelegate<T> &) = delete;
 	multicastDelegate(multicastDelegate<T> &&) = delete;

@@ -1,13 +1,11 @@
 ﻿#pragma once
 
 #include <mutex>
-
+#include <opencv2/core.hpp>
 
 #include "Structs/multicast-delegate.h"
-#include "Structs/obs-frame.h"
 
 class OBSBlueprintVariable;
-struct pixel;
 class OBSBlueprintInputPin;
 class OBSBlueprintOutputPin;
 class OBSBlueprintNode;
@@ -27,16 +25,32 @@ public:
 	~OBSBlueprintGraph();
 	void sourcePropertiesClick();
 	void tick(float deltaSeconds);
-	pixel* getRenderPixels() const;
+	uint8_t* getRenderPixels() const;
 	uint32_t getWidth() const;
 	uint32_t getHeight() const;
 
 
 	/* -------- C++ only functions -------- */
 
+	/**
+	 * Add a variable on the graph.
+	 * @param variable The \c OBSBlueprintVariable that will be added to the graph.
+	 */
 	void addVariable(OBSBlueprintVariable* variable);
+
+	/**
+	 * Remove and \c delete a variable on the graph.
+	 * @param variable The \c OBSBlueprintVariable to remove.
+	 */
 	void deleteVariable(OBSBlueprintVariable* variable);
+
+	/**
+	 * Get the list of all variables currently on the graph.
+	 * @return The \c std::list const reference of all \c OBSBlueprintVariable*
+	 */
 	const std::list<OBSBlueprintVariable*>& getVariables() const {return graphVariables;}
+
+	/** TODO */
 	bool isVariableUsed(OBSBlueprintVariable* variable);
 
 	/**
@@ -76,7 +90,7 @@ public:
 	 * @return The \c std::list const reference of all \c OBSBlueprintNode*
 	 * @see OBSBlueprintNode
 	 */
-	const std::list<OBSBlueprintNode*>& getNodes() const{return graphNodes;}
+	const std::list<OBSBlueprintNode*>& getNodes() const {return graphNodes;}
 
 	/**
 	 * Get the list of all connectors currently on the graph.

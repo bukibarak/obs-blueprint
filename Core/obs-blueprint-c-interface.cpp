@@ -23,7 +23,7 @@ extern "C"
 		static_cast<OBSBlueprintGraph *>(graph)->tick(seconds);
 	}
 
-	pixel* c_blueprint_graph_get_pixels(CPP_BlueprintGraphPtr graph)
+	unsigned char* c_blueprint_graph_get_pixels(CPP_BlueprintGraphPtr graph)
 	{
 		return static_cast<OBSBlueprintGraph *>(graph)->getRenderPixels();
 	}

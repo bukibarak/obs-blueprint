@@ -8,6 +8,7 @@
 
 #include "obs-graphics-variables-list.h"
 #include "Core/obs-blueprint-graph.h"
+#include "Core/obs-blueprint-variable.h"
 #include "GUI/obs-graphics-main-window.h"
 #include "GUI/obs-graphics-scene.h"
 #include "Helpers/obs-blueprint-factory.h"
@@ -118,7 +119,7 @@ bool GUIVariablesWidget::tryDuplicate(QListWidgetItem *item)
 		return false;
 
 	OBSBlueprintVariable* original = variables[item];
-	OBSBlueprintVariable* copy = OBSBlueprintFactory::CreateVariableFromPin(original->getPinType(), std::string(original->getDisplayName() + std::string(" (copy)")).c_str());
+	OBSBlueprintVariable* copy = OBSBlueprintFactory::CreateVariable(original->getPinType(), std::string(original->getDisplayName() + std::string(" (copy)")).c_str());
 	if(copy != nullptr) {
 		ctx.graph->addVariable(copy);
 		return tryCreate(copy);

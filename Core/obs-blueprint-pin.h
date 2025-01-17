@@ -1,7 +1,4 @@
 ﻿#pragma once
-#include <functional>
-#include <string>
-#include <algorithm>
 
 #include "pin-type.h"
 #include "Helpers/enum-to-string.h"

@@ -27,34 +27,17 @@ private:
 			     long long endTime, long rotation);
 	void onReactivate();
 
-	std::mutex mutex{};
+	OBSFrame currentFrame = OBSFrame::EmptyFrame;
+	std::atomic_bool needFrameUpdate = false;
 
-	OBSFrame frame = OBSFrame::EmptyFrame;
-	bool frameUpdated = false;
-	bool validFormat = false;
-
-	int32_t index = -1;
-	std::vector<DShow::VideoDevice> devices{};
+	int32_t currDeviceIndex = -1;
+	std::vector<DShow::VideoDevice> availableDevices{};
 
 	DShow::VideoConfig videoConfig;
 	DShow::Device device{};
+	bool running = false;
 
 	OBSBlueprintInputPin* indexPin;
 	OBSBlueprintOutputPin* videoPin;
-
-	std::function<void()> videoConnectionChanged = [this] {
-		if (device.Valid()) {
-			if (videoPin->isConnected()) {
-				if (device.Start() == DShow::Result::Error) {
-					DShow::DeviceId id;
-					device.GetVideoDeviceId(id);
-					GError("[NodeCameraSource] Failed to start capture device '%ls'", id.name.c_str());
-				}
-			}
-			else {
-				device.Stop();
-			}
-		}
-	};
 
 };

@@ -1,5 +1,6 @@
 ﻿#include "obs-blueprint-factory.h"
 
+#include "Core/pin-type.h"
 #include "Core/obs-blueprint-variable.h"
 #include "Structs/obs-frame.h"
 
@@ -55,7 +56,7 @@ OBSBlueprintVariable * OBSBlueprintFactory::CreateColorVariable(
 	return OBSBlueprintVariable::CreateVariable<uint32_t>(COLOR_PIN, name);
 }
 
-OBSBlueprintVariable * OBSBlueprintFactory::CreateVariableFromPin(
+OBSBlueprintVariable * OBSBlueprintFactory::CreateVariable(
 	const PinType &type, const char *name)
 {
 	switch(type) {

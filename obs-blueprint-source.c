@@ -3,7 +3,7 @@
 
 struct blueprint_source {
 	CPP_BlueprintGraphPtr graph;
-	struct pixel* pixels;
+	uint8_t* pixels;
 	uint32_t width;
 	uint32_t height;
 	gs_texture_t* texture;
@@ -80,7 +80,7 @@ static void obs_blueprint_source_render(void* data, gs_effect_t* effect)
 	struct blueprint_source* context = data;
 	uint32_t width = c_blueprint_graph_get_width(context->graph);
 	uint32_t height = c_blueprint_graph_get_height(context->graph);
-	struct pixel* pixels = c_blueprint_graph_get_pixels(context->graph);
+	unsigned char* pixels = c_blueprint_graph_get_pixels(context->graph);
 
 	if (pixels == NULL || width == 0 || height == 0) {
 		// No pixels found in graph, do not render anything
@@ -103,7 +103,7 @@ static void obs_blueprint_source_render(void* data, gs_effect_t* effect)
 	else if (context->texture != NULL && context->width == width && context->height == height) {
 		// Only pixels data have changed, update texture without recreate
 		context->pixels = pixels;
-		gs_texture_set_image(context->texture, (const uint8_t*)pixels, width * 4, false);
+		gs_texture_set_image(context->texture, pixels, width * 4, false);
 	}
 	else {
 		// Change detected in graph, recreate texture
@@ -114,7 +114,7 @@ static void obs_blueprint_source_render(void* data, gs_effect_t* effect)
 			gs_texture_destroy(context->texture);
 		}
 		obs_enter_graphics();
-		const uint8_t* dataPtr = (const uint8_t*)pixels;
+		const uint8_t* dataPtr = pixels;
 		context->texture = gs_texture_create(width, height, GS_BGRA, 1, &dataPtr, GS_DYNAMIC);
 		obs_leave_graphics();
 	}

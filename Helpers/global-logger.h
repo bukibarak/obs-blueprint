@@ -7,9 +7,10 @@
 #define GError(format, ...) blog(LOG_ERROR,   "[OBS Blueprint] [ERROR] " format, ##__VA_ARGS__)
 
 
-
+// TODO: Finish others log levels and use this instead of prepocessor macros ?
+// TODO: If not, delete code below as well as global-logger.cpp
 namespace MyLogger {
 
-	EXPORT void Info(const char* format, ...);
+EXPORT void Info(const char* format, ...);
 
 }

@@ -7,10 +7,10 @@
  * All PinType have a corresponding type. Please see \c PinConverter for more details.
  */
 enum PinType : unsigned char {
-	UNKNOWN_PIN,
+	UNKNOWN_PIN,		// void (void* ?)
 	AUDIOVIDEO_PIN,		// ??? TODO
 	AUDIO_PIN,			// ??? TODO
-	VIDEO_PIN,			// video_frame()
+	VIDEO_PIN,			// OBSFrame()
 	EXECUTION_PIN,		// std::function<void()>
 	BOOLEAN_PIN,		// bool
 	BYTE_PIN,			// uint8_t
@@ -19,7 +19,7 @@ enum PinType : unsigned char {
 	CHAR_PIN,			// char
 	STRING_PIN,			// std::string
 	COLOR_PIN,			// uint32_t
-	ANY_PIN, // Used by context menu to filter
+	ANY_PIN,			// Used by context menu to filter
 };
 
 

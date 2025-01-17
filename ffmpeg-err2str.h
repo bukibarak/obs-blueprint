@@ -1,14 +1,7 @@
-﻿// #pragma once
+﻿#pragma once
 
-// #ifdef __cplusplus
-// extern "C" {
-// #endif
-//
-// 	const char* cpp_av_err2str(int errnum);
-//
-// #ifdef __cplusplus
-// }
-// #endif
+// This C/C++ interface is just to compile macro av_err2str with C99 compiler, because with C++ compiler we got error:
+// C4576: "a parenthesized type followed by an initializer list is a non-standard explicit type conversion syntax"
 
 #ifdef __cplusplus
 extern "C" {

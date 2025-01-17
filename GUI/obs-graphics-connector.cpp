@@ -2,6 +2,7 @@
 
 #include <QPainter>
 
+#include "obs-graphics-pin.h"
 #include "Helpers/pin-helper.h"
 
 OBSGraphicsConnector::OBSGraphicsConnector(OBSBlueprintConnector *connector, OBSGraphicsPin *fromPin,

@@ -1,77 +1,80 @@
 ﻿#pragma once
-#include <QIcon>
+#include <string>
+#include <unordered_map>
+#include <QColor>
 
-#include "Core/obs-blueprint-variable.h"
-#include "GUI/obs-graphics-pin.h"
+class OBSGraphicsPin;
+enum PinType : unsigned char;
+class QPixmap;
+class QIcon;
+class OBSBlueprintPin;
+class OBSBlueprintVariable;
 
+/** Includes helpers functions to convert pins or variables value from/to string. */
 namespace TypeConverter {
-	std::string AsString(OBSBlueprintPin* pin);
-	std::string AsString(OBSBlueprintVariable* variable);
-	void FromString(OBSBlueprintPin* pin, const std::string& strValue);
-	void FromString(OBSBlueprintVariable* variable, const std::string& strValue);
+/**
+ * Convert the value of a \c OBSBlueprintPin to \c std::string \n
+ * When it cannot be converted, return empty string.
+ * @param pin The pin.
+ * @return The pin value converted to \c std::string, or empty string if it cannot be converted.
+ */
+std::string AsString(OBSBlueprintPin* pin);
+
+/**
+* Convert the value of a \c OBSBlueprintVariable to \c std::string \n
+ * When it cannot be converted, return empty string.
+ * @param variable The variable.
+ * @return The variable value converted to \c std::string, or empty string if it cannot be converted.
+ */
+std::string AsString(OBSBlueprintVariable* variable);
+
+/**
+ * Convert and store the value of a \c std::string to the \c OBSBlueprintPin \n
+ * Does nothing if the value cannot be converted to the pin variable type.
+ * @param pin The pin.
+ * @param strValue The value to be stored in the pin, if possible.
+ */
+void FromString(OBSBlueprintPin* pin, const std::string& strValue);
+
+/**
+ * Convert and store the value of a \c std::string to the \c OBSBlueprintVariable \n
+ *  Does nothing if the value cannot be converted to the variable type.
+ * @param variable The variable.
+ * @param strValue The value to be stored in the variable, if possible.
+ */
+void FromString(OBSBlueprintVariable* variable, const std::string& strValue);
 }
 
 class PinColors {
 public:
-	inline static const std::unordered_map<PinType, QColor> Color{
-		{UNKNOWN_PIN, QColor::fromRgbF(0.750000f,0.600000f,0.400000f)},
-		{AUDIOVIDEO_PIN, QColor::fromRgbF(0.100000f,0.000000f,0.500000f)},
-		{AUDIO_PIN, QColor::fromRgbF(1.000000f,0.040000f,0.040000f)},
-		{VIDEO_PIN, QColor::fromRgbF(0.000000f,0.400000f,0.910000f)},
-		{EXECUTION_PIN, QColor::fromRgbF(1.000000f,1.000000f,1.000000f)},
-		{BOOLEAN_PIN, QColor::fromRgbF(0.300000f,0.000000f,0.000000f)},
-		{BYTE_PIN, QColor::fromRgbF(0.000000f,0.160000f,0.131270f)},
-		{INT_PIN, QColor::fromRgbF(0.013575f,0.770000f,0.42960f)},
-		{FLOAT_PIN, QColor::fromRgbF(0.039216f,0.666667f,0.000000f)},
-		{CHAR_PIN, QColor::fromRgbF(0.607717f,0.224984f,1.000000f)},
-		{STRING_PIN, QColor::fromRgbF(1.000000f,0.000000f,0.660537f)},
-		{COLOR_PIN, QColor::fromRgbF(0.000000f,0.100000f,0.600000f)},
-		{ANY_PIN, QColor::fromRgbF(0.220000f,0.195800f,0.195800f)},
-	};
 
+	/** Get the \c QColor associated to the provided type. @see \c PinColors::Color */
+	static const QColor& Get(const PinType& type);
+
+	/** Get the \c QColor associated to the provided \c OBSBlueprintPin type. @see \c PinColors::Color */
+	static const QColor& Get(const OBSBlueprintPin* pin);
+
+	/** Get the \c QColor associated to the provided \c OBSGraphicsPin type. @see \c PinColors::Color */
+	static const QColor& Get(const OBSGraphicsPin* pin);
+
+	/** Get the \c QColor as a 10x10 \c QIcon associated to the provided type. @see \c PinColors::Color */
+	static const QIcon& GetIcon(const PinType& type);
+
+	/** Get the \c QColor as a 10x10 \c QPixmap associated to the provided type. @see \c PinColors::Color */
+	static const QPixmap& GetPixmap(const PinType& type);
+
+
+	/** Get the \c QPixmap icon used when the pin is connected (10x10 green circle). */
+	static const QPixmap& ConnectedIcon();
+
+	/** Get the \c QPixmap icon used when the pin is \b not connected (10x10 red circle). */
+	static const QPixmap& DisconnectedIcon();
+
+	/** Default color used when PinType is not associated to a color. @see \c PinColors::Color */
 	inline static const QColor Default{Qt::black};
 
-	static const QColor& Get(const PinType& type)
-	{
-		if(const auto it = Color.find(type); it != Color.end()) return it->second;
-		return Default;
-	}
-	static const QColor& Get(const OBSBlueprintPin* pin)
-	{
-		return Get(pin->getPinType());
-	}
-	static const QColor& Get(const OBSGraphicsPin* pin)
-	{
-		return Get(pin->getBlueprintPin());
-	}
-
-	static const QIcon& GetIcon(const PinType& type)
-	{
-		if(const auto it = Icon.find(type); it != Icon.end()) {
-			return it->second;
-		}
-		if(const auto it = Pixmap.find(type); it != Pixmap.end()) {
-			Icon[type] = QIcon(it->second);
-			return Icon[type];
-		}
-		Pixmap[type] = QPixmap(10,10);
-		Pixmap[type].fill(Get(type));
-		Icon[type] = QIcon(Pixmap[type]);
-		return Icon[type];
-	}
-
-	static const QPixmap& GetPixmap(const PinType& type)
-	{
-		if(const auto it = Pixmap.find(type); it != Pixmap.end()) {
-			return it->second;
-		}
-		Pixmap[type] = QPixmap(10,10);
-		Pixmap[type].fill(Get(type));
-		return Pixmap[type];
-	}
-
-	static const QPixmap& ConnectedIcon();
-	static const QPixmap& DisconnectedIcon();
+	/** Map of all \c QColor used according to the pin type. \n I use the same color as Unreal Engine Blueprint colors. */
+	static const std::unordered_map<PinType, QColor> Color;
 
 private:
 	static std::unordered_map<PinType, QPixmap> Pixmap;
