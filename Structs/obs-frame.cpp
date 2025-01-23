@@ -15,7 +15,7 @@ OBSFrame::OBSFrame(int width, int height, uint8_t *data, FrameFormat::PixelForma
 	}
 	else if (auto it = FrameFormat::Converter.find(format); it != FrameFormat::Converter.end()) {
 		cv::UMat raw;
-		cv::Mat temp{(isYUV(format) ? (3*height) / 2 : height), width, FrameFormat::Type.at(format), data};
+		cv::Mat temp{(isYUV(format) ? heightYUV(height, format) : height), width, FrameFormat::Type.at(format), data};
 		//cv::Mat TESTONLY(height, width, CV_8UC4);
 		//cv::cvtColor(temp, TESTONLY, it->second); // Used to view variable as image with Rider debugger
 		temp.copyTo(raw);
@@ -71,5 +71,29 @@ bool OBSFrame::isYUV(const FrameFormat::PixelFormat& format)
 	case FrameFormat::BGR555:
 	default:
 		return false;
+	}
+}
+
+int OBSFrame::heightYUV(const int &height, const FrameFormat::PixelFormat &format)
+{
+	switch (format) {
+	case FrameFormat::NV12:
+	case FrameFormat::YV12:
+	case FrameFormat::NV21:
+	case FrameFormat::IYUV:
+		return (3*height) / 2; // 12 bits per pixels
+	case FrameFormat::UYVY:
+	case FrameFormat::YUY2:
+	case FrameFormat::YVYU:
+		return height; // 16 bits per pixels
+	case FrameFormat::BGRA:
+	case FrameFormat::BGR:
+	case FrameFormat::RGB:
+	case FrameFormat::RGBA:
+	case FrameFormat::GRAY:
+	case FrameFormat::BGR565:
+	case FrameFormat::BGR555:
+	default:
+			return height; // 8 bits per pixels
 	}
 }

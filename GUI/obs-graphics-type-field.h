@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <QComboBox>
 #include <QWidget>
 
 #include "Core/pin-type.h"
@@ -15,10 +16,10 @@ class QLineEdit;
 
 struct FieldFormat {
 	const PinType& pinType;
-	const PinGraphicsOptions& options = PinGraphicsOptions::DEFAULT;
+	PinGraphicsOptions* options = nullptr;
 
 	FieldFormat(const PinType& type) : pinType(type) {}
-	FieldFormat(const PinType& type, const PinGraphicsOptions& options) : pinType(type), options(options) {}
+	FieldFormat(const PinType& type, PinGraphicsOptions& options) : pinType(type), options(&options) {}
 };
 
 class OBSGraphicsTypeField : public QWidget {
@@ -42,4 +43,16 @@ private:
 	QSignalBlocker* preventQtSignals = nullptr;
 
 	QValidator* validatorField = nullptr;
+
+	std::function<void()> comboBoxOptionsChangedCallback = [this] {
+		listField->clear();
+		if (fieldFormat.options->comboBoxOptions.empty()) {
+			listField->addItem("");
+		}
+		else {
+			for (const auto& option : fieldFormat.options->comboBoxOptions) {
+				listField->addItem(option.first.c_str());
+			}
+		}
+	};
 };

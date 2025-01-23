@@ -256,11 +256,11 @@ void OBSBlueprintGraph::addNode(OBSBlueprintNode *node)
 
 void OBSBlueprintGraph::deleteNode(OBSBlueprintNode *node)
 {
-	mutex.lock();
-	graphNodes.remove(node);
 	for(OBSBlueprintConnector* connector : node->getAllConnectors()) {
 		deleteConnector(connector);
 	}
+	mutex.lock();
+	graphNodes.remove(node);
 	delete node;
 	mutex.unlock();
 }

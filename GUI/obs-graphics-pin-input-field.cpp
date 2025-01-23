@@ -9,6 +9,7 @@ OBSGraphicsPinInputField::OBSGraphicsPinInputField(GUIContext& context,
 	// QGraphiscProxyWidget associated widget MUST have nullptr parent, see more on setWidget() at the end of constructor.
 	field = new OBSGraphicsTypeField({bpPin->getPinType(), bpPin->graphicsOptions}, nullptr, TypeConverter::AsString(pin->getBlueprintPin()).c_str(), false);
 	setScale(1.3);
+	setZValue(1000);
 
 	mutex.lock();
 	bpPin->onConnectionChanged += pinConnectionStateChangedCallback;

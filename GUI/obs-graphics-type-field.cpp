@@ -14,15 +14,17 @@
 OBSGraphicsTypeField::OBSGraphicsTypeField(const FieldFormat &format,
 	QWidget *parent, const QString& value, bool withLayout) : QWidget(parent), fieldFormat(format)
 {
-	if (format.options.showAsComboBox) {
-		const auto& options = format.options.comboBoxOptions;
+
+	if (format.options && format.options->showAsComboBox) {
+		format.options->onOptionsChanged += comboBoxOptionsChangedCallback;
+		const auto& options = format.options->comboBoxOptions;
 		listField = new QComboBox(this);
 		if (!options.empty()) {
 			for (const auto& option : options) {
             	listField->addItem(option.first.c_str());
 			}
 			connection = connect(listField, &QComboBox::currentTextChanged, [this](const QString& text) {
-				auto& options = fieldFormat.options.comboBoxOptions;
+				auto& options = fieldFormat.options->comboBoxOptions;
 				if (auto it = options.find(text.toStdString()); it != options.end()) {
 					onValueChanged.execute(it->second.c_str());
 				}
@@ -113,6 +115,8 @@ OBSGraphicsTypeField::OBSGraphicsTypeField(const FieldFormat &format,
 
 OBSGraphicsTypeField::~OBSGraphicsTypeField()
 {
+	if (fieldFormat.options)
+		fieldFormat.options->onOptionsChanged -= comboBoxOptionsChangedCallback;
 	disconnect(connection);
 }
 
@@ -122,7 +126,7 @@ void OBSGraphicsTypeField::setValue(const QString &value)
 	if (preventQtSignals != nullptr)
 		preventQtSignals->reblock();
 
-	if (fieldFormat.options.showAsComboBox) {
+	if (fieldFormat.options && fieldFormat.options->showAsComboBox) {
 		// TODO
 		GWarn("Unimplemented OBSGraphicsTypeField::setValue() with fieldFormat.options.showAsComboBox");
 	}
@@ -160,8 +164,8 @@ void OBSGraphicsTypeField::setValue(const QString &value)
 
 QString OBSGraphicsTypeField::getValue() const
 {
-	if (fieldFormat.options.showAsComboBox) {
-		const auto& options = fieldFormat.options.comboBoxOptions;
+	if (fieldFormat.options && fieldFormat.options->showAsComboBox) {
+		const auto& options = fieldFormat.options->comboBoxOptions;
 		if (auto it = options.find(listField->currentText().toStdString()); it != options.end()) {
 			return it->second.c_str();
 		}

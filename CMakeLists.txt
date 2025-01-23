@@ -14,16 +14,16 @@ find_package(Qt6 REQUIRED Core Widgets)
 # Find all c++ files within project directories
 file(GLOB_RECURSE obs-blueprint_SOURCES
   LIST_DIRECTORIES false
-  "${CMAKE_CURRENT_SOURCE_DIR}/Core/*.h",
-  "${CMAKE_CURRENT_SOURCE_DIR}/Core/*.cpp",
-  "${CMAKE_CURRENT_SOURCE_DIR}/GUI/*.h",
-  "${CMAKE_CURRENT_SOURCE_DIR}/GUI/*.cpp",
-  "${CMAKE_CURRENT_SOURCE_DIR}/Helpers/*.h",
-  "${CMAKE_CURRENT_SOURCE_DIR}/Helpers/*.cpp",
-  "${CMAKE_CURRENT_SOURCE_DIR}/Nodes/*.h",
-  "${CMAKE_CURRENT_SOURCE_DIR}/Nodes/*.cpp",
-  "${CMAKE_CURRENT_SOURCE_DIR}/Structs/*.h",
-  "${CMAKE_CURRENT_SOURCE_DIR}/Structs/*.cpp",
+  "${CMAKE_CURRENT_SOURCE_DIR}/Core/*.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Core/*.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/GUI/*.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/GUI/*.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Helpers/*.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Helpers/*.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Nodes/*.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Nodes/*.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Structs/*.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Structs/*.cpp"
 )
 
 # Append c files to variable
@@ -50,7 +50,7 @@ target_link_libraries(
               winmm # required by libdshowcapture
               FFmpeg::swscale) #required by media-playback
 
-# Copy OpenCV dll
+# Post-build macro command to help copy DLL depending of build type (Debug, Release) --> Mainly from ChatGPT
 MACRO(COPY_DLL libname platform)
     # Si le paramètre debug_only est défini, on ne copie le fichier que pour la configuration Debug
     if("${platform}" STREQUAL "DEBUG")
@@ -72,8 +72,10 @@ MACRO(COPY_DLL libname platform)
     endif()
 ENDMACRO(COPY_DLL)
 
-COPY_DLL(opencv_world4110 ALL)
-COPY_DLL(opencv_world4110d DEBUG)
+# copy OpenCV DLLs based on OpenCV version (4100 for 4.10.0, 4110 for 4.11.0, 4120, ...)
+string(REPLACE "." "" OpenCV_DLL_VERSION ${OpenCV_VERSION})
+COPY_DLL("opencv_world${OpenCV_DLL_VERSION}" ALL)
+COPY_DLL("opencv_world${OpenCV_DLL_VERSION}d" DEBUG)
 
 # install_obs_plugin_with_data(obs-blueprint data)
 set_target_properties_obs(obs-blueprint PROPERTIES FOLDER plugins PREFIX "")

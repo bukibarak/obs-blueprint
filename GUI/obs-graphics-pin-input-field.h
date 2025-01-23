@@ -24,6 +24,7 @@ private:
 	OBSBlueprintPin* bpPin = nullptr;
 	OBSGraphicsTypeField* field = nullptr;
 
+
 	std::function<void()> pinConnectionStateChangedCallback = [this] {
 		if (pin->getBlueprintPin()->isConnected()) {
 			hide();

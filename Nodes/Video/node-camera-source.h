@@ -10,6 +10,7 @@ public:
 	~NodeCameraSource() override;
 
 	void onGraphBeginTick(float deltaSeconds) override;
+	void onGraphEndTick() override;
 	void execute(float deltaSeconds) override;
 
 
@@ -38,6 +39,7 @@ private:
 	bool running = false;
 
 	OBSBlueprintInputPin* indexPin;
+	OBSBlueprintInputPin* resolutionPin;
 	OBSBlueprintOutputPin* videoPin;
 
 };

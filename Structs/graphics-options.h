@@ -2,11 +2,12 @@
 #include <string>
 #include <unordered_map>
 
+#include "multicast-delegate.h"
+
 struct PinGraphicsOptions {
 	bool showAsComboBox = false;
 	std::unordered_map<std::string, std::string> comboBoxOptions{};
-
-	static const PinGraphicsOptions DEFAULT;
+	multicastDelegate_ZeroParam onOptionsChanged;
 };
 
 struct NodeGraphicsOptions {

@@ -62,5 +62,6 @@ struct OBSFrame {
 private:
 	cv::UMat umat;
 
-	static bool isYUV(const FrameFormat::PixelFormat& format);
+	inline static bool isYUV(const FrameFormat::PixelFormat& format);
+	inline static int heightYUV(const int& height, const FrameFormat::PixelFormat& format);
 };

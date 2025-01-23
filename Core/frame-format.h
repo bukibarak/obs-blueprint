@@ -47,8 +47,8 @@ namespace FrameFormat {
 		{NV21, CV_8UC1},
 		{IYUV, CV_8UC1},
 		{UYVY, CV_8UC2},
-		{YUY2, CV_8UC1},
-		{YVYU, CV_8UC1},
+		{YUY2, CV_8UC2},
+		{YVYU, CV_8UC2},
 	};
 
 	static const std::unordered_map<PixelFormat, cv::ColorConversionCodes> Converter {
